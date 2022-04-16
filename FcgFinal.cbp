@@ -369,7 +369,15 @@
 		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/tiny_obj_loader.h" />
 		<Unit filename="include/utils.h" />
+		<Unit filename="src/block.cpp" />
+		<Unit filename="src/block.hpp" />
+		<Unit filename="src/glad.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/stb_image.cpp" />
+		<Unit filename="src/textrendering.cpp" />
+		<Unit filename="src/tiny_obj_loader.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
