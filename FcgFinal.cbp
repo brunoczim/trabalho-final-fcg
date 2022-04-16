@@ -374,6 +374,8 @@
 		<Unit filename="src/glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/gpu.cpp" />
+		<Unit filename="src/gpu.hpp" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/stb_image.cpp" />
 		<Unit filename="src/textrendering.cpp" />
