@@ -62,10 +62,10 @@ glm::mat4 Matrix_Identity()
 glm::mat4 Matrix_Translate(float tx, float ty, float tz)
 {
     return Matrix(
-        1.0f , 0.0f , 0.0f , tx ,
-        0.0f , 1.0f , 0.0f , ty ,
-        0.0f , 0.0f , 1.0f , tz ,
-        0.0f , 0.0f , 0.0f , 1.0f
+        1.0f , 0.0f , 0.0f , tx ,  // LINHA 1
+        0.0f , 1.0f , 0.0f , ty ,  // LINHA 2
+        0.0f , 0.0f , 1.0f , tz ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
@@ -78,10 +78,10 @@ glm::mat4 Matrix_Translate(float tx, float ty, float tz)
 glm::mat4 Matrix_Scale(float sx, float sy, float sz)
 {
     return Matrix(
-        sx   , 0.0f , 0.0f , 0.0f ,
-        0.0f , sy   , 0.0f , 0.0f ,
-        0.0f , 0.0f , sz   , 0.0f ,
-        0.0f , 0.0f , 0.0f , 1.0f
+        sx , 0.0f , 0.0f , 0.0f ,  // LINHA 1
+        0.0f , sy , 0.0f , 0.0f ,  // LINHA 2
+        0.0f , 0.0f , sz , 0.0f ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
@@ -98,10 +98,10 @@ glm::mat4 Matrix_Rotate_X(float angle)
     float c = cos(angle);
     float s = sin(angle);
     return Matrix(
-        1.0f , 0.0f , 0.0f , 0.0f ,
-        0.0f ,  c   , -s   , 0.0f ,
-        0.0f ,  s   ,  c   , 0.0f ,
-        0.0f , 0.0f , 0.0f , 1.0f
+        1.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 1
+        0.0f , c , -s , 0.0f ,  // LINHA 2
+        0.0f , s , c , 0.0f ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
@@ -118,10 +118,10 @@ glm::mat4 Matrix_Rotate_Y(float angle)
     float c = cos(angle);
     float s = sin(angle);
     return Matrix(
-         c   , 0.0f ,  s   , 0.0f ,
-        0.0f , 1.0f , 0.0f , 0.0f ,
-        -s   , 0.0f ,  c   , 0.0f ,
-        0.0f , 0.0f , 0.0f , 1.0f
+        c , 0.0f , s , 0.0f ,  // LINHA 1
+        0.0f , 1.0f , 0.0f , 0.0f ,  // LINHA 2
+        -s , 0.0f , c , 0.0f ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
@@ -138,10 +138,10 @@ glm::mat4 Matrix_Rotate_Z(float angle)
     float c = cos(angle);
     float s = sin(angle);
     return Matrix(
-         c   , -s   , 0.0f , 0.0f ,
-         s   ,  c   , 0.0f , 0.0f ,
-        0.0f , 0.0f , 1.0f , 0.0f ,
-        0.0f , 0.0f , 0.0f , 1.0f
+        c , -s , 0.0f , 0.0f ,  // LINHA 1
+        s , c , 0.0f , 0.0f ,  // LINHA 2
+        0.0f , 0.0f , 1.0f , 0.0f ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
@@ -156,7 +156,7 @@ float norm(glm::vec4 v)
     return sqrt( vx*vx + vy*vy + vz*vz );
 }
 
-// Matriz R de "rotação de um ponto" em relação à origem do sistema de
+// Matriz R de "rotação de um ponto" em reladção à origem do sistema de
 // coordenadas e em torno do eixo definido pelo vetor 'axis'. Esta matriz pode
 // ser definida pela fórmula de Rodrigues. Lembre-se que o vetor que define o
 // eixo de rotação deve ser normalizado!
@@ -172,10 +172,10 @@ glm::mat4 Matrix_Rotate(float angle, glm::vec4 axis)
     float vz = v.z;
 
     return Matrix(
-        vx*vx*(1.0f-c)+c    , vx*vy*(1.0f-c)-vz*s , vx*vz*(1-c)+vy*s , 0.0f ,
-        vx*vy*(1.0f-c)+vz*s , vy*vy*(1.0f-c)+c    , vy*vz*(1-c)-vx*s , 0.0f ,
-        vx*vz*(1-c)-vy*s    , vy*vz*(1-c)+vx*s    , vz*vz*(1.0f-c)+c , 0.0f ,
-        0.0f                , 0.0f                , 0.0f             , 1.0f
+        vx*vx*(1-c) + c , vx*vy*(1-c) - vz*s , vx*vz*(1-c) + vy*s, 0.0f ,  // LINHA 1
+        vx*vy*(1-c) + vz*s, vy*vy*(1-c) + c , vy*vz*(1-c) - vx*s , 0.0f ,  // LINHA 2
+        vx*vz*(1-c) - vy*s, vy*vz*(1-c) + vx*s , vz*vz*(1-c)+c , 0.0f ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
@@ -193,7 +193,7 @@ glm::vec4 crossproduct(glm::vec4 u, glm::vec4 v)
     return glm::vec4(
         u2*v3 - u3*v2, // Primeiro coeficiente
         u3*v1 - u1*v3, // Segundo coeficiente
-        u1*v2 - u2*v1, // Terceiro coeficiente
+        u1*v2 - u2*v1,
         0.0f // w = 0 para vetores.
     );
 }
@@ -217,14 +217,14 @@ float dotproduct(glm::vec4 u, glm::vec4 v)
         std::exit(EXIT_FAILURE);
     }
 
-    return u1*v1 + u2*v2 + u3*v3;
+    return u1*v1 + u2*v2 + u3*v3 + u4*v4;
 }
 
 // Matriz de mudança de coordenadas para o sistema de coordenadas da Câmera.
 glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::vec4 up_vector)
 {
     glm::vec4 w = -view_vector;
-    glm::vec4 u = crossproduct(up_vector, w);
+    glm::vec4 u = crossproduct(up_vector, w / norm(w));
 
     // Normalizamos os vetores u e w
     w = w / norm(w);
@@ -244,11 +244,13 @@ glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::v
     float wy = w.y;
     float wz = w.z;
 
+    glm::vec4 vector_c = glm::vec4(position_c[0], position_c[1], position_c[2], 0.0f);
+
     return Matrix(
-        ux   , uy   , uz   , -dotproduct(u , position_c - origin_o) ,
-        vx   , vy   , vz   , -dotproduct(v , position_c - origin_o) ,
-        wx   , wy   , wz   , -dotproduct(w , position_c - origin_o) ,
-        0.0f , 0.0f , 0.0f , 1.0f
+        ux , uy , uz ,  -dotproduct(u, vector_c),  // LINHA 1
+        vx , vy , vz , -dotproduct(v, vector_c),  // LINHA 2
+        wx , wy , wz , -dotproduct(w, vector_c),  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
@@ -256,10 +258,10 @@ glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::v
 glm::mat4 Matrix_Orthographic(float l, float r, float b, float t, float n, float f)
 {
     glm::mat4 M = Matrix(
-        2.0f/(r-l) , 0.0f       , 0.0f       , -(r+l)/(r-l) ,
-        0.0f       , 2.0f/(t-b) , 0.0f       , -(t+b)/(t-b) ,
-        0.0f       , 0.0f       , 2.0f/(f-n) , -(f+n)/(f-n) ,
-        0.0f       , 0.0f       , 0.0f       , 1.0f
+        2.0f/(r-l) , 0.0f , 0.0f , -((r+l)/(r-l)) ,  // LINHA 1
+        0.0f , 2.0f/(t-b) , 0.0f , -((t+b)/(t-b)) ,  // LINHA 2
+        0.0f , 0.0f , 2.0f/(f-n) , -((f+n)/(f-n)) ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 
     return M;
@@ -274,10 +276,10 @@ glm::mat4 Matrix_Perspective(float field_of_view, float aspect, float n, float f
     float l = -r;
 
     glm::mat4 P = Matrix(
-        n    , 0.0f , 0.0f , 0.0f,
-        0.0f , n    , 0.0f , 0.0f,
-        0.0f , 0.0f , n+f  , -f*n,
-        0.0f , 0.0f , 1.0f , 0.0f
+        n , 0.0f , 0.0f , 0.0f ,  // LINHA 1
+        0.0f , n , 0.0f , 0.0f ,  // LINHA 2
+        0.0f , 0.0f , n + f , -f * n ,  // LINHA 3
+        0.0f , 0.0f , 1.0f , 0.0f    // LINHA 4
     );
 
     // A matriz M é a mesma computada acima em Matrix_Orthographic().
