@@ -16,6 +16,7 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.hpp"
+#include "MatrixStack.hpp"
 #include "Camera.hpp"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -64,7 +65,7 @@ bool g_ShowInfoText = true;
 // de tempo. Utilizadas no callback CursorPosCallback() abaixo.
 double g_LastCursorPosX, g_LastCursorPosY;
 
-Camera g_Camera;
+Camera g_camera;
 
 int main(int argc, char const *argv[])
 {
@@ -173,10 +174,10 @@ int main(int argc, char const *argv[])
         // comentários detalhados dentro da definição de BuildTriangles().
         glBindVertexArray(vertex_array_object_id);
 
-        glm::mat4 view = g_Camera.viewMatrix();
+        glm::mat4 view = g_camera.view_matrix();
 
         // Agora computamos a matriz de Projeção.
-        glm::mat4 projection = g_Camera.projectionMatrix();
+        glm::mat4 projection = g_camera.projection_matrix();
 
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
@@ -184,8 +185,13 @@ int main(int argc, char const *argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
+        glm::mat4 model = Matrix_Identity();
+        MatrixStack matrix_stack;
 
-        glm::mat4 model = Matrix_Scale(1.0f, 1.0f, 1.0f);
+        matrix_stack.push(model);
+            model = model * Matrix_Scale(0.5f, 0.5f, 0.5f);
+
+        matrix_stack.pop(model);
 
         the_model = model;
         the_projection = projection;
@@ -200,41 +206,6 @@ int main(int argc, char const *argv[])
         // "render_as_black" deve ser colocada como "false". Veja o arquivo
         // "shader_vertex.glsl".
         glUniform1i(render_as_black_uniform, false);
-
-        // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
-        // VAO como triângulos, formando as faces do cubo. Esta
-        // renderização irá executar o Vertex Shader definido no arquivo
-        // "shader_vertex.glsl", e o mesmo irá utilizar as matrizes
-        // "model", "view" e "projection" definidas acima e já enviadas
-        // para a placa de vídeo (GPU).
-        //
-        // Veja a definição de g_VirtualScene["cube_faces"] dentro da
-        // função BuildTriangles(), e veja a documentação da função
-        // glDrawElements() em http://docs.gl/gl3/glDrawElements.
-        glDrawElements(
-            g_VirtualScene["cube_faces"].rendering_mode, // Veja slides 124-130 do documento Aula_04_Modelagem_Geometrica_3D.pdf
-            g_VirtualScene["cube_faces"].num_indices,
-            GL_UNSIGNED_INT,
-            (void*)g_VirtualScene["cube_faces"].first_index
-        );
-
-
-
-        // Pedimos para a GPU rasterizar os vértices apontados pelo VAO como
-        // triângulos.
-        //
-        //                +--- Veja slides 124-130 do documento Aula_04_Modelagem_Geometrica_3D.pdf.
-        //                |          +--- O array "indices[]" contém 6 índices (veja função BuildTriangles()).
-        //                |          |  +--- Os índices são do tipo "GLubyte" (8 bits sem sinal)
-        //                |          |  |                 +--- Vértices começam em indices[0] (veja função BuildTriangles()).
-        //                |          |  |                 |
-        //                V          V  V                 V
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
-
-        // "Desligamos" o VAO, evitando assim que operações posteriores venham a
-        // alterar o mesmo. Isso evita bugs.
-        glBindVertexArray(0);
-
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -301,8 +272,8 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     float dx = xpos - g_LastCursorPosX;
     float dy = ypos - g_LastCursorPosY;
 
-    g_Camera.rotateViewTheta(dx);
-    g_Camera.rotateViewPhi(dy);
+    g_camera.rotate_view_theta(dx);
+    g_camera.rotate_view_phi(dy);
 
     // Atualizamos as variáveis globais para armazenar a posição atual do
     // cursor como sendo a última posição conhecida do cursor.
@@ -313,7 +284,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    g_Camera.zoom(yoffset);
+    g_camera.zoom(yoffset);
 }
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
@@ -343,13 +314,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     /******* Movimento da Câmera Para Frente/Trás/Lados *******/
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_W) {
-            g_Camera.moveForewards();
+            g_camera.move_forewards();
         } else if (key == GLFW_KEY_S) {
-            g_Camera.moveBackwards();
+            g_camera.move_backwards();
         } else if (key == GLFW_KEY_A) {
-            g_Camera.moveLeftwards();
+            g_camera.move_leftwards();
         } else if (key == GLFW_KEY_D) {
-            g_Camera.moveRightwards();
+            g_camera.move_rightwards();
         }
     }
 
@@ -380,13 +351,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
     if (key == GLFW_KEY_P && action == GLFW_PRESS)
     {
-        g_Camera.setProjectionType(Camera::PERSPECTIVE_PROJ);
+        g_camera.set_projection_type(Camera::PERSPECTIVE_PROJ);
     }
 
     // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
     {
-        g_Camera.setProjectionType(Camera::ORTHOGRAPHIC_PROJ);
+        g_camera.set_projection_type(Camera::ORTHOGRAPHIC_PROJ);
     }
 
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
@@ -414,7 +385,7 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
     //
     // O cast para float é necessário pois números inteiros são arredondados ao
     // serem divididos!
-    g_Camera.onScreenResize(width, height);
+    g_camera.on_screen_resize(width, height);
 }
 
 // Carrega um Vertex Shader de um arquivo. Veja definição de LoadShader() abaixo.
