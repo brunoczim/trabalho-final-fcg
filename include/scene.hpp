@@ -10,18 +10,23 @@ struct SceneObject
     int          num_indices; // Número de índices do objeto dentro do vetor indices[] definido em BuildTriangles()
     GLenum       rendering_mode; // Modo de rasterização (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.)
 
-    void draw() const;
+    void Draw() const;
 };
 
-struct CubeSceneObject {
+struct CubeSceneObject
+{
 public:
     SceneObject faces;
     SceneObject edges;
 
-    void draw(GLint render_as_black_uniform) const;
+    GLuint Build();
 
-    static CubeSceneObject build(GLuint *vertex_array_object_id);
+    void Draw(GLint render_as_black_uniform) const;
 };
 
+struct VirtualScene
+{
+    CubeSceneObject cube;
+};
 
 #endif // SCENE_HPP

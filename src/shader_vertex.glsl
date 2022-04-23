@@ -1,45 +1,63 @@
 #version 330 core
-  
-// Atributos de v√©rtice recebidos como entrada ("in") pelo Vertex Shader.
-// Veja a fun√ß√£o BuildTriangle() em "main.cpp".
-layout (location = 0) in vec4 NDC_coefficients;
+
+// Atributos de vÈrtice recebidos como entrada ("in") pelo Vertex Shader.
+// Veja a funÁ„o BuildTriangle() em "main.cpp".
+layout (location = 0) in vec4 model_coefficients;
 layout (location = 1) in vec4 color_coefficients;
 
-// Atributos de v√©rtice que ser√£o gerados como sa√≠da ("out") pelo Vertex Shader.
-// ** Estes ser√£o interpolados pelo rasterizador! ** gerando, assim, valores
-// para cada fragmento, os quais ser√£o recebidos como entrada pelo Fragment
+// Atributos de vÈrtice que ser„o gerados como saÌda ("out") pelo Vertex Shader.
+// ** Estes ser„o interpolados pelo rasterizador! ** gerando, assim, valores
+// para cada fragmento, os quais ser„o recebidos como entrada pelo Fragment
 // Shader. Veja o arquivo "shader_fragment.glsl".
 out vec4 cor_interpolada_pelo_rasterizador;
 
+// Matrizes computadas no cÛdigo C++ e enviadas para a GPU
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+// Vari·vel booleana no cÛdigo C++ tambÈm enviada para a GPU
+uniform bool render_as_black;
+
 void main()
 {
-    // A vari√°vel gl_Position define a posi√ß√£o final de cada v√©rtice
+    // A vari·vel gl_Position define a posiÁ„o final de cada vÈrtice
     // OBRIGATORIAMENTE em "normalized device coordinates" (NDC), onde cada
-    // coeficiente est√° entre -1 e 1.  (Veja slides 163 e 168 do documento
-    // "Aula_03_Rendering_Pipeline_Grafico.pdf").
-    // 
-    // Como o c√≥digo em "main.cpp" j√° define estes v√©rtices em NDC (veja o
-    // array NDC_coefficients), simplesmente copiamos tais valores para a
-    // vari√°vel gl_Position.
-    gl_Position = NDC_coefficients;
+    // coeficiente est· entre -1 e 1.  (Veja {+NDC2+}).
+    //
+    // O cÛdigo em "main.cpp" define os vÈrtices dos modelos em coordenadas
+    // locais de cada modelo (array model_coefficients). Abaixo, utilizamos
+    // operaÁıes de modelagem, definiÁ„o da c‚mera, e projeÁ„o, para computar
+    // as coordenadas finais em NDC (vari·vel gl_Position). ApÛs a execuÁ„o
+    // deste Vertex Shader, a placa de vÌdeo (GPU) far· a divis„o por W. Veja
+    // slides 41-67 e 69-86 do documento Aula_09_Projecoes.pdf.
 
-    // Como as vari√°veis acima s√£o vetores com 4 coeficientes (tipo vec4),
-    // tamb√©m √© poss√≠vel acessar e modificar cada coeficiente de maneira
-    // independente. Esses s√£o indexados pelos nomes x, y, z, e w (nessa
-    // ordem, isto √©, 'x' √© o primeiro coeficiente, 'y' √© o segundo, ...):
-    // 
-    //     gl_Position.x = NDC_coefficients.x;
-    //     gl_Position.y = NDC_coefficients.y;
-    //     gl_Position.z = NDC_coefficients.z;
-    //     gl_Position.w = NDC_coefficients.w;
+    gl_Position = projection * view * model * model_coefficients;
+
+    // Como as vari·veis acima  (tipo vec4) s„o vetores com 4 coeficientes,
+    // tambÈm È possÌvel acessar e modificar cada coeficiente de maneira
+    // independente. Esses s„o indexados pelos nomes x, y, z, e w (nessa
+    // ordem, isto È, 'x' È o primeiro coeficiente, 'y' È o segundo, ...):
+    //
+    //     gl_Position.x = model_coefficients.x;
+    //     gl_Position.y = model_coefficients.y;
+    //     gl_Position.z = model_coefficients.z;
+    //     gl_Position.w = model_coefficients.w;
     //
 
-    // Copiamos o atributo cor (de entrada) de cada v√©rtice para a vari√°vel
-    // "cor_interpolada_pelo_rasterizador". Esta vari√°vel ser√° interpolada pelo
-    // rasterizador, gerando valores interpolados para cada fragmento!  Veja o
-    // arquivo "shader_fragment.glsl".
-    cor_interpolada_pelo_rasterizador = color_coefficients;
-
-    // Nas aulas sobre transforma√ß√µes geom√©trica veremos como transformar
-    // coeficientes em outros sistemas de coordenadas para coeficientes NDC.
+    if ( render_as_black )
+    {
+        // Ignoramos o atributo cor dos vÈrtices, colocando a cor final como
+        // preta. Utilizamos isto para renderizar as arestas pretas dos cubos.
+        cor_interpolada_pelo_rasterizador = vec4(0.0f,0.0f,0.0f,1.0f);
+    }
+    else
+    {
+        // Copiamos o atributo cor (de entrada) de cada vÈrtice para a vari·vel
+        // "cor_interpolada_pelo_rasterizador". Esta vari·vel ser· interpolada pelo
+        // rasterizador, gerando valores interpolados para cada fragmento!  Veja o
+        // arquivo "shader_fragment.glsl".
+        cor_interpolada_pelo_rasterizador = color_coefficients;
+    }
 }
+

@@ -14,24 +14,23 @@ public:
 
     Camera();
 
-    void rotate_view_theta(int dx);
-    void rotate_view_phi(int dy);
+    void RotateViewTheta(int dx);
+    void RotateViewPhi(int dy);
 
-    void move_forewards();
-    void move_backwards();
-    void move_leftwards();
-    void move_rightwards();
+    void MoveForewards();
+    void MoveBackwards();
+    void MoveLeftwards();
+    void MoveRightwards();
 
-    void on_screen_resize(int width, int height);
-    void set_projection_type(ProjectionType projection_type);
-    void zoom(float factor);
+    void OnScreenResize(int width, int height);
+    void SetProjectionType(ProjectionType projection_type);
+    void Zoom(float factor);
 
-    glm::mat4 view_matrix() const;
-    glm::mat4 projection_matrix() const;
+    glm::mat4 ViewMatrix() const;
+    glm::mat4 ProjectionMatrix() const;
 
 private:
     ProjectionType projection_type;
-    float distance;
     glm::vec4 center_point;
     float view_theta;
     float view_phi;
@@ -42,12 +41,12 @@ private:
     float zoom_speed;
     float nearplane;
     float farplane;
-    float field_of_view;
+    float field_of_view_ratio;
     float screen_ratio;
 
-    glm::vec4 view_vector() const;
-    glm::vec4 u_vector() const;
-    glm::vec4 w_vector() const;
+    glm::vec4 ViewVector() const;
+    glm::vec4 UVector() const;
+    glm::vec4 WVector() const;
 };
 
 #endif // CAMERA_HPP

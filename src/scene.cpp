@@ -1,6 +1,6 @@
 #include "scene.hpp"
 
-void SceneObject::draw() const
+void SceneObject::Draw() const
 {
     glDrawElements(
         this->rendering_mode, // Veja slides 124-130 do documento Aula_04_Modelagem_Geometrica_3D.pdf
@@ -10,42 +10,7 @@ void SceneObject::draw() const
     );
 }
 
-void CubeSceneObject::draw(GLint render_as_black_uniform) const
-{
-    // Informamos para a placa de vídeo (GPU) que a variável booleana
-    // "render_as_black" deve ser colocada como "false". Veja o arquivo
-    // "shader_vertex.glsl".
-    glUniform1i(render_as_black_uniform, false);
-
-    // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
-    // VAO como triângulos, formando as faces do cubo. Esta
-    // renderização irá executar o Vertex Shader definido no arquivo
-    // "shader_vertex.glsl", e o mesmo irá utilizar as matrizes
-    // "model", "view" e "projection" definidas acima e já enviadas
-    // para a placa de vídeo (GPU).
-    //
-    // Veja a definição de g_VirtualScene["cube_faces"] dentro da
-    // função BuildTriangles(), e veja a documentação da função
-    // glDrawElements() em http://docs.gl/gl3/glDrawElements.
-    this->faces.draw();
-
-    // Pedimos para OpenGL desenhar linhas com largura de 4 pixels.
-    glLineWidth(4.0f);
-
-    // Informamos para a placa de vídeo (GPU) que a variável booleana
-    // "render_as_black" deve ser colocada como "true". Veja o arquivo
-    // "shader_vertex.glsl".
-    glUniform1i(render_as_black_uniform, true);
-
-    // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
-    // VAO como linhas, formando as arestas pretas do cubo. Veja a
-    // definição de g_VirtualScene["cube_edges"] dentro da função
-    // BuildTriangles(), e veja a documentação da função
-    // glDrawElements() em http://docs.gl/gl3/glDrawElements.
-    this->edges.draw();
-}
-
-CubeSceneObject CubeSceneObject::build(GLuint *vertex_array_object_id)
+GLuint CubeSceneObject::Build()
 {
     // Primeiro, definimos os atributos de cada vértice.
 
@@ -91,14 +56,16 @@ CubeSceneObject CubeSceneObject::build(GLuint *vertex_array_object_id)
     GLuint VBO_model_coefficients_id;
     glGenBuffers(1, &VBO_model_coefficients_id);
 
+    GLuint vertex_array_object_id;
+
     // Criamos o identificador (ID) de um Vertex Array Object (VAO).  Um VAO
     // contém a definição de vários atributos de um certo conjunto de vértices;
     // isto é, um VAO irá conter ponteiros para vários VBOs.
-    glGenVertexArrays(1,vertex_array_object_id);
+    glGenVertexArrays(1, &vertex_array_object_id);
 
     // "Ligamos" o VAO ("bind"). Informamos que iremos atualizar o VAO cujo ID
     // está contido na variável "vertex_array_object_id".
-    glBindVertexArray(*vertex_array_object_id);
+    glBindVertexArray(vertex_array_object_id);
 
     // "Ligamos" o VBO ("bind"). Informamos que o VBO cujo ID está contido na
     // variável VBO_model_coefficients_id será modificado a seguir. A
@@ -227,22 +194,19 @@ CubeSceneObject CubeSceneObject::build(GLuint *vertex_array_object_id)
         7, 3, // linha 12
     };
 
-
-    CubeSceneObject cube;
-
     // Criamos um primeiro objeto virtual (SceneObject) que se refere às faces
     // coloridas do cubo.
-    cube.faces.name           = "Cubo (faces coloridas)";
-    cube.faces.first_index    = (void*)0; // Primeiro índice está em indices[0]
-    cube.faces.num_indices    = 36;       // Último índice está em indices[35]; total de 36 índices.
-    cube.faces.rendering_mode = GL_TRIANGLES; // Índices correspondem ao tipo de rasterização GL_TRIANGLES.
+    this->faces.name           = "Cubo (faces coloridas)";
+    this->faces.first_index    = (void*)0; // Primeiro índice está em indices[0]
+    this->faces.num_indices    = 36;       // Último índice está em indices[35]; total de 36 índices.
+    this->faces.rendering_mode = GL_TRIANGLES; // Índices correspondem ao tipo de rasterização GL_TRIANGLES.
 
     // Criamos um segundo objeto virtual (SceneObject) que se refere às arestas
     // pretas do cubo.
-    cube.edges.name           = "Cubo (arestas pretas)";
-    cube.edges.first_index    = (void*)(36*sizeof(GLuint)); // Primeiro índice está em indices[36]
-    cube.edges.num_indices   = 24; // Último índice está em indices[59]; total de 24 índices.
-    cube.edges.rendering_mode = GL_LINES; // Índices correspondem ao tipo de rasterização GL_LINES.
+    this->edges.name           = "Cubo (arestas pretas)";
+    this->edges.first_index    = (void*)(36*sizeof(GLuint)); // Primeiro índice está em indices[36]
+    this->edges.num_indices   = 24; // Último índice está em indices[59]; total de 24 índices.
+    this->edges.rendering_mode = GL_LINES; // Índices correspondem ao tipo de rasterização GL_LINES.
 
     // Criamos um buffer OpenGL para armazenar os índices acima
     GLuint indices_id;
@@ -268,5 +232,40 @@ CubeSceneObject CubeSceneObject::build(GLuint *vertex_array_object_id)
     // alterar o mesmo. Isso evita bugs.
     glBindVertexArray(0);
 
-    return cube;
+    return vertex_array_object_id;
+}
+
+void CubeSceneObject::Draw(GLint render_as_black_uniform) const
+{
+    // Informamos para a placa de vídeo (GPU) que a variável booleana
+    // "render_as_black" deve ser colocada como "false". Veja o arquivo
+    // "shader_vertex.glsl".
+    glUniform1i(render_as_black_uniform, false);
+
+    // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
+    // VAO como triângulos, formando as faces do cubo. Esta
+    // renderização irá executar o Vertex Shader definido no arquivo
+    // "shader_vertex.glsl", e o mesmo irá utilizar as matrizes
+    // "model", "view" e "projection" definidas acima e já enviadas
+    // para a placa de vídeo (GPU).
+    //
+    // Veja a definição de g_VirtualScene["cube_faces"] dentro da
+    // função BuildTriangles(), e veja a documentação da função
+    // glDrawElements() em http://docs.gl/gl3/glDrawElements.
+    this->faces.Draw();
+
+    // Pedimos para OpenGL desenhar linhas com largura de 4 pixels.
+    glLineWidth(4.0f);
+
+    // Informamos para a placa de vídeo (GPU) que a variável booleana
+    // "render_as_black" deve ser colocada como "true". Veja o arquivo
+    // "shader_vertex.glsl".
+    glUniform1i(render_as_black_uniform, true);
+
+    // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
+    // VAO como linhas, formando as arestas pretas do cubo. Veja a
+    // definição de g_VirtualScene["cube_edges"] dentro da função
+    // BuildTriangles(), e veja a documentação da função
+    // glDrawElements() em http://docs.gl/gl3/glDrawElements.
+    this->edges.Draw();
 }

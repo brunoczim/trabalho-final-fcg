@@ -370,6 +370,7 @@
 		<Unit filename="include/glm/vector_relational.hpp" />
 		<Unit filename="include/gpu.hpp" />
 		<Unit filename="include/matrices.hpp" />
+		<Unit filename="include/scene.hpp" />
 		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/tiny_obj_loader.h" />
 		<Unit filename="include/utils.h" />
@@ -382,6 +383,7 @@
 		<Unit filename="src/gpu.cpp" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/matrices.cpp" />
+		<Unit filename="src/scene.cpp" />
 		<Unit filename="src/shader_fragment.glsl" />
 		<Unit filename="src/shader_vertex.glsl" />
 		<Unit filename="src/stb_image.cpp" />
