@@ -1,4 +1,4 @@
-#include "block.hpp"
+#include "blocks.hpp"
 
 WorldBlockMatrix::WorldBlockMatrix(): blocks { BLOCK_AIR }
 {

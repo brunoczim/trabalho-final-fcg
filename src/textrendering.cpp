@@ -11,7 +11,7 @@
 #include "utils.h"
 #include "dejavufont.h"
 
-#include "gpu.hpp"
+GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Função definida em main.cpp
 
 const GLchar* const textvertexshader_source = ""
 "#version 330\n"

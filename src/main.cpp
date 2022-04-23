@@ -1,4 +1,4 @@
-#include "block.hpp"
+#include "blocks.hpp"
 #include "gpu.hpp"
 #include <iostream>
 #include <fstream>
@@ -15,7 +15,8 @@
 
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
-#include "matrices.h"
+#include "matrices.hpp"
+#include "Camera.hpp"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ErrorCallback(int error, const char* description);
@@ -34,13 +35,6 @@ void setupFramebufferSize(GLFWwindow *window);
 
 GLuint BuildTriangles(); // Constrói triângulos para renderização
 
-// Cria o vetor view a partir dos angulos theta e phi desse, alem da norma rho
-glm::vec4 CameraViewVector(void);
-// Cria o vetor w da camera
-glm::vec4 CameraVectorW(void);
-// Cria o vetor u da camera
-glm::vec4 CameraVectorU(void);
-
 struct SceneObject
 {
     const char*  name;        // Nome do objeto
@@ -49,7 +43,9 @@ struct SceneObject
     GLenum       rendering_mode; // Modo de rasterização (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.)
 };
 
-std::map<const char*, SceneObject> g_VirtualScene;
+typedef std::map<const char*, SceneObject> VirtualScene;
+
+VirtualScene g_VirtualScene;
 
 // Ângulos de Euler que controlam a rotação de um dos cubos da cena virtual
 float g_AngleX = 0.0f;
@@ -60,36 +56,15 @@ float g_AngleZ = 0.0f;
 // pressionado no momento atual. Veja função MouseButtonCallback().
 bool g_LeftMouseButtonPressed = false;
 
-float g_CameraDistance = 2.5f; // Distância da câmera para a origem
-
-// Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
-bool g_UsePerspectiveProjection = true;
-
 // Variável que controla se o texto informativo será mostrado na tela.
 bool g_ShowInfoText = true;
-
-// Ponto c da camera
-glm::vec4 g_CameraCenterPoint = {-4.0f, 0.0f, -1.5f, 1.0f};
-// Angulo Theta em coordenadas esfericas do vetor view da camera
-float g_CameraViewTheta = 1.2f;
-// Angulo Phi em coordenadas esfericas do vetor view da camera
-float g_CameraViewPhi = 0.0f;
-// Norma Rho em coordenadas esfericas do vetor view da camera
-const float g_CameraViewRho = 1.0f;
-// Vetor up da camera
-const glm::vec4 g_CameraUpVector = {0.0f, 1.0f, 0.0f, 0.0f};
-
-// Velocidade de movimento WASD da camera.
-const float g_CameraMoveSpeed = 0.05f;
-// Velocidade de rotacao da camera com o mouse.
-const float g_CameraRotateSpeed = 0.01f;
-
-float g_ScreenRatio = 1.0f;
 
 // Variáveis globais que armazenam a última posição do cursor do mouse, para
 // que possamos calcular quanto que o mouse se movimentou entre dois instantes
 // de tempo. Utilizadas no callback CursorPosCallback() abaixo.
 double g_LastCursorPosX, g_LastCursorPosY;
+
+Camera g_Camera;
 
 int main(int argc, char const *argv[])
 {
@@ -198,43 +173,50 @@ int main(int argc, char const *argv[])
         // comentários detalhados dentro da definição de BuildTriangles().
         glBindVertexArray(vertex_array_object_id);
 
-        glm::mat4 view = Matrix_Camera_View(g_CameraCenterPoint, CameraViewVector(), g_CameraUpVector);
+        glm::mat4 view = g_Camera.viewMatrix();
 
         // Agora computamos a matriz de Projeção.
-        glm::mat4 projection;
-
-
-        // Note que, no sistema de coordenadas da câmera, os planos near e far
-        // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
-        float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
-
-        if (g_UsePerspectiveProjection)
-        {
-            // Projeção Perspectiva.
-            // Para definição do field of view (FOV), veja slides 205-215 do documento Aula_09_Projecoes.pdf.
-            float field_of_view = 3.141592 / 3.0f;
-            projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
-        }
-        else
-        {
-            // Projeção Ortográfica.
-            // Para definição dos valores l, r, b, t ("left", "right", "bottom", "top"),
-            // PARA PROJEÇÃO ORTOGRÁFICA veja slides 219-224 do documento Aula_09_Projecoes.pdf.
-            // Para simular um "zoom" ortográfico, computamos o valor de "t"
-            // utilizando a variável g_CameraDistance.
-            float t = 1.5f*g_CameraDistance/2.5f;
-            float b = -t;
-            float r = t*g_ScreenRatio;
-            float l = -r;
-            projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
-        }
+        glm::mat4 projection = g_Camera.projectionMatrix();
 
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
+
+
+        glm::mat4 model = Matrix_Scale(1.0f, 1.0f, 1.0f);
+
+        the_model = model;
+        the_projection = projection;
+        the_view = view;
+
+        // Enviamos a matriz "model" para a placa de vídeo (GPU). Veja o
+        // arquivo "shader_vertex.glsl", onde esta é efetivamente
+        // aplicada em todos os pontos.
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+
+        // Informamos para a placa de vídeo (GPU) que a variável booleana
+        // "render_as_black" deve ser colocada como "false". Veja o arquivo
+        // "shader_vertex.glsl".
+        glUniform1i(render_as_black_uniform, false);
+
+        // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
+        // VAO como triângulos, formando as faces do cubo. Esta
+        // renderização irá executar o Vertex Shader definido no arquivo
+        // "shader_vertex.glsl", e o mesmo irá utilizar as matrizes
+        // "model", "view" e "projection" definidas acima e já enviadas
+        // para a placa de vídeo (GPU).
+        //
+        // Veja a definição de g_VirtualScene["cube_faces"] dentro da
+        // função BuildTriangles(), e veja a documentação da função
+        // glDrawElements() em http://docs.gl/gl3/glDrawElements.
+        glDrawElements(
+            g_VirtualScene["cube_faces"].rendering_mode, // Veja slides 124-130 do documento Aula_04_Modelagem_Geometrica_3D.pdf
+            g_VirtualScene["cube_faces"].num_indices,
+            GL_UNSIGNED_INT,
+            (void*)g_VirtualScene["cube_faces"].first_index
+        );
 
 
 
@@ -273,28 +255,6 @@ int main(int argc, char const *argv[])
     // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
     return 0;
-}
-
-glm::vec4 CameraViewVector(void)
-{
-    return glm::vec4(
-        g_CameraViewRho * sin(g_CameraViewTheta) * cos(g_CameraViewPhi),
-        g_CameraViewRho * sin(g_CameraViewTheta) * sin(g_CameraViewPhi),
-        g_CameraViewRho * cos(g_CameraViewTheta),
-        0.0f
-    );
-}
-
-glm::vec4 CameraVectorW(void)
-{
-    glm::vec4 vector_w = -CameraViewVector();
-    return vector_w * (1 / norm(vector_w));
-}
-
-glm::vec4 CameraVectorU(void)
-{
-    glm::vec4 vector_u = crossproduct(g_CameraUpVector, CameraVectorW());
-    return vector_u * (1 / norm(vector_u));
 }
 
 // Definimos o callback para impressão de erros da GLFW no terminal
@@ -340,26 +300,9 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
     float dx = xpos - g_LastCursorPosX;
     float dy = ypos - g_LastCursorPosY;
-    float angle_x = g_CameraRotateSpeed * dx;
-    float angle_y = g_CameraRotateSpeed * dy;
 
-    // Atualizando os angulos sem alterar a norma!
-    g_CameraViewTheta -= angle_x;
-    g_CameraViewPhi -= angle_y;
-
-    float pi = acos(-1.0f);
-
-    if (g_CameraViewTheta > pi * 2) {
-        g_CameraViewTheta -= pi * 2;
-    } else if (g_CameraViewTheta < -pi * 2) {
-        g_CameraViewTheta += pi * 2;
-    }
-
-    if (g_CameraViewPhi > pi * 2) {
-        g_CameraViewPhi -= pi * 2;
-    } else if (g_CameraViewPhi < -pi * 2) {
-        g_CameraViewPhi += pi * 2;
-    }
+    g_Camera.rotateViewTheta(dx);
+    g_Camera.rotateViewPhi(dy);
 
     // Atualizamos as variáveis globais para armazenar a posição atual do
     // cursor como sendo a última posição conhecida do cursor.
@@ -370,18 +313,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-        // Atualizamos a distância da câmera para a origem utilizando a
-    // movimentação da "rodinha", simulando um ZOOM.
-    g_CameraDistance -= 0.1f*yoffset;
-
-    // Uma câmera look-at nunca pode estar exatamente "em cima" do ponto para
-    // onde ela está olhando, pois isto gera problemas de divisão por zero na
-    // definição do sistema de coordenadas da câmera. Isto é, a variável abaixo
-    // nunca pode ser zero. Versões anteriores deste código possuíam este bug,
-    // o qual foi detectado pelo aluno Vinicius Fraga (2017/2).
-    const float verysmallnumber = std::numeric_limits<float>::epsilon();
-    if (g_CameraDistance < verysmallnumber)
-        g_CameraDistance = verysmallnumber;
+    g_Camera.move(yoffset);
 }
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
@@ -411,13 +343,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     /******* Movimento da Câmera Para Frente/Trás/Lados *******/
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_W) {
-            g_CameraCenterPoint += -CameraVectorW() * g_CameraMoveSpeed;
+            g_Camera.moveForewards();
         } else if (key == GLFW_KEY_S) {
-            g_CameraCenterPoint += CameraVectorW() * g_CameraMoveSpeed;
+            g_Camera.moveBackwards();
         } else if (key == GLFW_KEY_A) {
-            g_CameraCenterPoint += -CameraVectorU() * g_CameraMoveSpeed;
+            g_Camera.moveLeftwards();
         } else if (key == GLFW_KEY_D) {
-            g_CameraCenterPoint += CameraVectorU() * g_CameraMoveSpeed;
+            g_Camera.moveRightwards();
         }
     }
 
@@ -448,13 +380,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
     if (key == GLFW_KEY_P && action == GLFW_PRESS)
     {
-        g_UsePerspectiveProjection = true;
+        g_Camera.setProjectionType(Camera::PERSPECTIVE_PROJ);
     }
 
     // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
     {
-        g_UsePerspectiveProjection = false;
+        g_Camera.setProjectionType(Camera::ORTHOGRAPHIC_PROJ);
     }
 
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
@@ -482,7 +414,7 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
     //
     // O cast para float é necessário pois números inteiros são arredondados ao
     // serem divididos!
-    g_ScreenRatio = (float) width / height;
+    g_Camera.onScreenResize(width, height);
 }
 
 // Carrega um Vertex Shader de um arquivo. Veja definição de LoadShader() abaixo.
