@@ -313,7 +313,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    g_Camera.move(yoffset);
+    g_Camera.zoom(yoffset);
 }
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma

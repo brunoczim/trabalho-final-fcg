@@ -14,7 +14,7 @@ public:
 
     Camera();
 
-        void rotateViewTheta(int dx);
+    void rotateViewTheta(int dx);
     void rotateViewPhi(int dy);
 
     void moveForewards();
@@ -24,7 +24,7 @@ public:
 
     void onScreenResize(int width, int height);
     void setProjectionType(ProjectionType projectionType);
-    void move(float offset);
+    void zoom(float factor);
 
     glm::mat4 viewMatrix() const;
     glm::mat4 projectionMatrix() const;
@@ -39,6 +39,7 @@ private:
     glm::vec4 upVector;
     float moveSpeed;
     float rotateSpeed;
+    float zoomSpeed;
     float nearplane;
     float farplane;
     float fieldOfView;

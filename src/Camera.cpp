@@ -11,6 +11,7 @@ Camera::Camera():
     upVector(0.0f, 1.0f, 0.0f, 0.0f),
     moveSpeed(0.05f),
     rotateSpeed(0.01f),
+    zoomSpeed(0.1f),
     nearplane(-0.1f),
     farplane(-10.0f),
     fieldOfView(acos(-1) / 3.0f),
@@ -71,11 +72,11 @@ void Camera::setProjectionType(ProjectionType projectionType)
     this->projectionType = projectionType;
 }
 
-void Camera::move(float offset)
+void Camera::zoom(float factor)
 {
     // Atualizamos a distância da câmera para a origem utilizando a
     // movimentação da "rodinha", simulando um ZOOM.
-    this->distance -= 0.1f * offset;
+    this->distance -= this->zoomSpeed * factor;
 
     // Uma câmera look-at nunca pode estar exatamente "em cima" do ponto para
     // onde ela está olhando, pois isto gera problemas de divisão por zero na
