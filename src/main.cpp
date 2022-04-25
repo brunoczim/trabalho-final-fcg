@@ -19,6 +19,7 @@
 #include "MatrixStack.hpp"
 #include "Camera.hpp"
 #include "scene.hpp"
+#include "stb_image.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ErrorCallback(int error, const char* description);
@@ -34,6 +35,8 @@ GLFWwindow *createWindow(void);
 void setupInputCallbacks(GLFWwindow *window);
 void printGlInfo();
 void setupFramebufferSize(GLFWwindow *window);
+
+GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id);
 
 // Ângulos de Euler que controlam a rotação de um dos cubos da cena virtual
 float g_AngleX = 0.0f;
@@ -116,6 +119,8 @@ int main(int argc, char const *argv[])
     // Criamos um programa de GPU utilizando os shaders carregados acima
     GLuint program_id = CreateGpuProgram(vertex_shader_id, fragment_shader_id);
 
+    GLuint stone_texture_id = LoadTextureImage("../../data/stone.png", "stone_texture_image", program_id);
+
     // Buscamos o endereço das variáveis definidas dentro do Vertex Shader.
     // Utilizaremos estas variáveis para enviar dados para a placa de vídeo
     // (GPU)! Veja arquivo "shader_vertex.glsl".
@@ -123,15 +128,14 @@ int main(int argc, char const *argv[])
     GLint view_uniform            = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
     GLint projection_uniform      = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
     GLint render_as_black_uniform = glGetUniformLocation(program_id, "render_as_black"); // Variável booleana em shader_vertex.glsl
+    GLint normal_uniform = glGetUniformLocation(program_id, "normal"); // Variável booleana em shader_vertex.glsl
 
-
-    // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.
+    // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.2
     glEnable(GL_DEPTH_TEST);
 
-    VirtualScene virtual_scene;
+    CubeSceneObjects virtual_scene;
 
-    // Construímos a representação de um triângulo
-    GLuint vertex_array_object_id = virtual_scene.cube.Build();
+    virtual_scene.Build();
 
     while (!glfwWindowShouldClose(window)) {
         // Aqui executamos as operações de renderização
@@ -152,45 +156,7 @@ int main(int argc, char const *argv[])
         // os shaders de vértice e fragmentos).
         glUseProgram(program_id);
 
-        // "Ligamos" o VAO. Informamos que queremos utilizar os atributos de
-        // vértices apontados pelo VAO criado pela função BuildTriangles(). Veja
-        // comentários detalhados dentro da definição de BuildTriangles().
-        glBindVertexArray(vertex_array_object_id);
-
-        glm::mat4 view = g_Camera.ViewMatrix();
-
-        // Agora computamos a matriz de Projeção.
-        glm::mat4 projection = g_Camera.ProjectionMatrix();
-
-        glm::mat4 model = Matrix_Identity();
-        MatrixStack matrix_stack;
-
-        matrix_stack.push(model);
-            model = model * Matrix_Scale(0.5f, 0.5f, 0.5f);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            // Desenhamos um cubo. Esta renderização irá executar o Vertex
-            // Shader definido no arquivo "shader_vertex.glsl", e o mesmo irá
-            // utilizar as matrizes "model", "view" e "projection" definidas
-            // acima e já enviadas para a placa de vídeo (GPU).
-            virtual_scene.cube.Draw(render_as_black_uniform);
-        matrix_stack.pop(model);
-
-
-        // Enviamos as matrizes "view" e "projection" para a placa de vídeo
-        // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
-        // efetivamente aplicadas em todos os pontos.
-        glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
-        glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
-
-        // Enviamos a matriz "model" para a placa de vídeo (GPU). Veja o
-        // arquivo "shader_vertex.glsl", onde esta é efetivamente
-        // aplicada em todos os pontos.
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-
-        // Informamos para a placa de vídeo (GPU) que a variável booleana
-        // "render_as_black" deve ser colocada como "false". Veja o arquivo
-        // "shader_vertex.glsl".
-        glUniform1i(render_as_black_uniform, false);
+        virtual_scene.Draw(g_Camera, model_uniform, view_uniform, projection_uniform, normal_uniform, render_as_black_uniform);
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -530,5 +496,64 @@ void setupFramebufferSize(GLFWwindow *window)
     // (região de memória onde são armazenados os pixels da imagem).
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     FramebufferSizeCallback(window, 800, 600); // Forçamos a chamada do callback acima, para definir g_ScreenRatio.
+}
+
+// Função que carrega uma imagem para ser utilizada como textura
+GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id)
+{
+    static GLuint loaded_textures = 0;
+
+    std::cout << "Carregando imagem \"" << path << "\"..." << std::endl;
+
+    // Primeiro fazemos a leitura da imagem do disco
+    stbi_set_flip_vertically_on_load(true);
+    int width;
+    int height;
+    int channels;
+    unsigned char *data = stbi_load(path, &width, &height, &channels, 3);
+
+    if (data == NULL) {
+        std::cerr << "ERROR: Cannot open image file \"" << path << "\"." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    std::cout << "Ok (" << width << "x" << height << ")" << std::endl;
+
+    // Agora criamos objetos na GPU com OpenGL para armazenar a textura
+    GLuint texture_id;
+    GLuint sampler_id;
+    glGenTextures(1, &texture_id);
+    glGenSamplers(1, &sampler_id);
+
+    // Veja slides 95-96 do documento Aula_20_Mapeamento_de_Texturas.pdf
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Parâmetros de amostragem da textura.
+    glSamplerParameteri(sampler_id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Agora enviamos a imagem lida do disco para a GPU
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+
+    GLuint textureunit = loaded_textures;
+    glActiveTexture(GL_TEXTURE0 + textureunit);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindSampler(textureunit, sampler_id);
+
+    stbi_image_free(data);
+
+    loaded_textures += 1;
+
+    glUseProgram(program_id);
+    glUniform1i(glGetUniformLocation(program_id, name), textureunit);
+    glUseProgram(0);
+
+    return textureunit;
 }
 
