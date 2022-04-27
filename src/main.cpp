@@ -38,11 +38,6 @@ void setupFramebufferSize(GLFWwindow *window);
 
 GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id);
 
-// Ângulos de Euler que controlam a rotação de um dos cubos da cena virtual
-float g_AngleX = 0.0f;
-float g_AngleY = 0.0f;
-float g_AngleZ = 0.0f;
-
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
 bool g_LeftMouseButtonPressed = false;
@@ -127,15 +122,14 @@ int main(int argc, char const *argv[])
     GLint model_uniform           = glGetUniformLocation(program_id, "model"); // Variável da matriz "model"
     GLint view_uniform            = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
     GLint projection_uniform      = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
-    GLint render_as_black_uniform = glGetUniformLocation(program_id, "render_as_black"); // Variável booleana em shader_vertex.glsl
-    GLint normal_uniform = glGetUniformLocation(program_id, "normal"); // Variável booleana em shader_vertex.glsl
+    GLint bbox_min_uniform        = glGetUniformLocation(program_id, "bbox_min");
+    GLint bbox_max_uniform        = glGetUniformLocation(program_id, "bbox_max");
+
 
     // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.2
     glEnable(GL_DEPTH_TEST);
 
-    CubeSceneObjects virtual_scene;
-
-    virtual_scene.Build();
+    VirtualScene virtual_scene;
 
     while (!glfwWindowShouldClose(window)) {
         // Aqui executamos as operações de renderização
@@ -156,7 +150,15 @@ int main(int argc, char const *argv[])
         // os shaders de vértice e fragmentos).
         glUseProgram(program_id);
 
-        virtual_scene.Draw(g_Camera, model_uniform, view_uniform, projection_uniform, normal_uniform, render_as_black_uniform);
+        glm::mat4 model = Matrix_Identity();
+        glm::mat4 view = g_Camera.ViewMatrix();
+        glm::mat4 projection = g_Camera.ProjectionMatrix();
+
+        glUniformMatrix4fv(view_uniform, 1, GL_FALSE , glm::value_ptr(view));
+        glUniformMatrix4fv(projection_uniform, 1, GL_FALSE , glm::value_ptr(projection));
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
+        virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
+
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -188,8 +190,7 @@ void ErrorCallback(int error, const char* description)
 // Função callback chamada sempre que o usuário aperta algum dos botões do mouse
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         // Se o usuário pressionou o botão esquerdo do mouse, guardamos a
         // posição atual do cursor nas variáveis g_LastCursorPosX e
         // g_LastCursorPosY.  Também, setamos a variável
@@ -198,8 +199,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
         g_LeftMouseButtonPressed = true;
     }
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-    {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
         g_LeftMouseButtonPressed = false;
@@ -277,43 +277,18 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     float delta = 3.141592 / 16; // 22.5 graus, em radianos.
 
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-    {
-        g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-    {
-        g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-    {
-        g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-
-    // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
-        g_AngleX = 0.0f;
-        g_AngleY = 0.0f;
-        g_AngleZ = 0.0f;
-    }
-
     // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
-    {
+    if (key == GLFW_KEY_P && action == GLFW_PRESS) {
         g_Camera.SetProjectionType(Camera::PERSPECTIVE_PROJ);
     }
 
     // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    {
+    if (key == GLFW_KEY_O && action == GLFW_PRESS) {
         g_Camera.SetProjectionType(Camera::ORTHOGRAPHIC_PROJ);
     }
 
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-    if (key == GLFW_KEY_H && action == GLFW_PRESS)
-    {
+    if (key == GLFW_KEY_H && action == GLFW_PRESS) {
         g_ShowInfoText = !g_ShowInfoText;
     }
 }
@@ -407,12 +382,10 @@ void LoadShader(const char* filename, GLuint shader_id)
     glGetShaderInfoLog(shader_id, log_length, &log_length, log);
 
     // Imprime no terminal qualquer erro ou "warning" de compilação
-    if ( log_length != 0 )
-    {
+    if (log_length != 0) {
         std::string  output;
 
-        if ( !compiled_ok )
-        {
+        if (!compiled_ok) {
             output += "ERROR: OpenGL compilation of \"";
             output += filename;
             output += "\" failed.\n";

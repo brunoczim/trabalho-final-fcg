@@ -18,6 +18,12 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+// Identificador que define qual objeto está sendo desenhado no momento
+#define SPHERE 0
+#define BUNNY  1
+#define PLANE  2
+uniform int object_id;
+
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
 uniform vec4 bbox_min;
 uniform vec4 bbox_max;
@@ -31,8 +37,6 @@ out vec4 color;
 // Constantes
 #define M_PI   3.14159265358979323846
 #define M_PI_2 1.57079632679489661923
-
-#define RHO 1.0f
 
 void main()
 {
@@ -58,31 +62,32 @@ void main()
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
 
-
-
     // Coordenadas de textura U e V
-    float U = 0.0f;
-    float V = 0.0f;
-    float scale = 1.0f;
-
-    if (normal.z != 0.0f) {
-        U = position_model.x * scale;
-        V = position_model.y * scale;
-    } else if (normal.y != 0.0f) {
-        U = position_model.z * scale;
-        V = position_model.x * scale;
-    } else {
-        U = position_model.y * scale;
-        V = position_model.z * scale;
+    float U = 0.0;
+    float V = 0.0;
+    // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+    if (abs(position_model.x) == 0.5) {
+        U = position_model.y;
+        V = position_model.z;
+    } else if (abs(position_model.y) == 0.5) {
+        U = position_model.x;
+        V = position_model.z;
+    } else if (abs(position_model.z) == 0.5) {
+        U = position_model.y;
+        V = position_model.x;
     }
 
-    // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    vec3 Kd = texture(stone_texture_image, vec2(U, V)).rgb;
+    U += 0.5;
+    V += 0.5;
+
+
+    // Obtemos a refletância difusa a partir da leitura da imagem stone_texture_image
+    vec3 Kd = texture(stone_texture_image, vec2(U,V)).rgb;
 
     // Equação de Iluminação
-    float lambert = max(0, dot(n, l));
+    float lambert = max(0,dot(n,l));
 
-    color.rgb = Kd;
+    color.rgb = Kd /* * (lambert + 0.01)*/;
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:

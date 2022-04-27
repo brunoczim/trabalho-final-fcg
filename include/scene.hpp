@@ -2,53 +2,56 @@
 #define SCENE_HPP
 
 #include <glad/glad.h>
-#include "Camera.hpp"
+#include <tiny_obj_loader.h>
+#include <Camera.hpp>
 
 class SceneObject
 {
 public:
-    const char*  name;        // Nome do objeto
-    void*        first_index; // Índice do primeiro vértice dentro do vetor indices[] definido em BuildTriangles()
-    int          num_indices; // Número de índices do objeto dentro do vetor indices[] definido em BuildTriangles()
+    std::string  name;        // Nome do objeto
+    size_t       first_index; // Índice do primeiro vértice dentro do vetor indices[] definido em BuildTrianglesAndAddToVirtualScene()
+    size_t       num_indices; // Número de índices do objeto dentro do vetor indices[] definido em BuildTrianglesAndAddToVirtualScene()
     GLenum       rendering_mode; // Modo de rasterização (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.)
+    GLuint       vertex_array_object_id; // ID do VAO onde estão armazenados os atributos do modelo
+    glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
+    glm::vec3    bbox_max;
 
-    GLuint vertex_array_object_id;
-
-    virtual void Build(float diameter = 1.0) = 0;
-
-    void Draw() const;
+    void Draw(GLint bbox_min_uniform, GLint bbox_max_uniform) const;
 };
 
-class CubeEdgeSceneObject : public SceneObject
-{
+struct VirtualScene {
+private:
+    std::map<std::string, SceneObject> objects;
 public:
-    virtual void Build(float diameter = 1.0);
+    VirtualScene();
+
+    void insert(SceneObject new_scene_object);
+
+    SceneObject const &operator [] (char const *name) const;
 };
 
-class CubeFaceSceneObject : public SceneObject
+struct ObjModel
 {
+private:
+    tinyobj::attrib_t                 attrib;
+    std::vector<tinyobj::shape_t>     shapes;
+    std::vector<tinyobj::material_t>  materials;
+
 public:
-    virtual void Build(float diameter);
-};
+    // Este construtor lê o modelo de um arquivo utilizando a biblioteca tinyobjloader.
+    // Veja: https://github.com/syoyo/tinyobjloader
+    ObjModel(const char* filename, const char* basepath = NULL, bool triangulate = true);
 
-struct CubeSceneObjects
-{
-public:
-    CubeFaceSceneObject face_object;
-    CubeEdgeSceneObject edge_object;
+    void ComputeNormals();
 
-    void Build(float diameter = 1.0);
+    void BuildTriangles(VirtualScene &target_virtual_scene) const;
 
-    void Draw(
-        Camera camera,
-        GLint model_uniform,
-        GLint view_uniform,
-        GLint projection_uniform,
-        GLint normal_uniform,
-        GLint render_as_black_uniform,
-        glm::vec4 center = glm::vec4(0.0, 0.0, 0.0, 1.0),
-        float scale = 1.0f
-    ) const;
+    static void NewIntoVirtualScene(
+        VirtualScene &target_virtual_scene,
+        const char* filename,
+        const char* basepath = NULL,
+        bool triangulate = true
+    );
 };
 
 #endif // SCENE_HPP

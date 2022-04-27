@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 #include "matrices.hpp"
+#include <stdexcept>
 
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
@@ -46,24 +47,34 @@ void Camera::RotateViewPhi(int dy)
     }
 }
 
+#include <iostream>
+
 void Camera::MoveForewards()
 {
     this->center_point += -this->WVector() * this->move_speed;
+    std::cout << "Camera position: " << std::endl;
+    PrintVector(this->center_point);
 }
 
 void Camera::MoveBackwards()
 {
     this->center_point += this->WVector() * this->move_speed;
+    std::cout << "Camera position: " << std::endl;
+    PrintVector(this->center_point);
 }
 
 void Camera::MoveLeftwards()
 {
     this->center_point += -this->UVector() * this->move_speed;
+    std::cout << "Camera position: " << std::endl;
+    PrintVector(this->center_point);
 }
 
 void Camera::MoveRightwards()
 {
     this->center_point += this->UVector() * this->move_speed;
+    std::cout << "Camera position: " << std::endl;
+    PrintVector(this->center_point);
 }
 
 void Camera::SetProjectionType(ProjectionType projection_type)
@@ -134,6 +145,6 @@ glm::mat4 Camera::ProjectionMatrix() const
     case ORTHOGRAPHIC_PROJ:
         return Matrix_Orthographic(l, r, b, t, this->nearplane, this->farplane);
     default:
-        throw "Invalid projection _type";
+        throw std::runtime_error("Invalid projection _type");
     }
 }
