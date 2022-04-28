@@ -133,12 +133,12 @@ for axis in range(3):
                         and vertex_axis_3 < SUBFACES - 1):
                     neighbour_1_list = [0, 0, 0]
                     neighbour_1_list[axis] = vertex_axis_1
-                    neighbour_1_list[(axis + 1) % 3] = vertex_axis_2 + 1
-                    neighbour_1_list[(axis + 2) % 3] = vertex_axis_3
+                    neighbour_1_list[(axis + 1) % 3] = vertex_axis_2
+                    neighbour_1_list[(axis + 2) % 3] = vertex_axis_3 + 1
 
                     neighbour_2_list = [0, 0, 0]
                     neighbour_2_list[axis] = vertex_axis_1
-                    neighbour_2_list[(axis + 1) % 3] = vertex_axis_2
+                    neighbour_2_list[(axis + 1) % 3] = vertex_axis_2 + 1
                     neighbour_2_list[(axis + 2) % 3] = vertex_axis_3 + 1
 
                     neighbour_1 = tuple(neighbour_1_list)
@@ -147,18 +147,17 @@ for axis in range(3):
                     faces.add((
                         vertex_index(vertex),
                         vertex_index(neighbour_2),
-                            vertex_index(neighbour_1)))
+                        vertex_index(neighbour_1)))
 
-                if vertex_axis_2 > 0 and vertex_axis_3 > 0:
                     neighbour_3_list = [0, 0, 0]
                     neighbour_3_list[axis] = vertex_axis_1
-                    neighbour_3_list[(axis + 1) % 3] = vertex_axis_2 - 1
+                    neighbour_3_list[(axis + 1) % 3] = vertex_axis_2 + 1
                     neighbour_3_list[(axis + 2) % 3] = vertex_axis_3
 
                     neighbour_4_list = [0, 0, 0]
                     neighbour_4_list[axis] = vertex_axis_1
-                    neighbour_4_list[(axis + 1) % 3] = vertex_axis_2
-                    neighbour_4_list[(axis + 2) % 3] = vertex_axis_3 - 1
+                    neighbour_4_list[(axis + 1) % 3] = vertex_axis_2 + 1
+                    neighbour_4_list[(axis + 2) % 3] = vertex_axis_3 + 1
 
                     neighbour_3 = tuple(neighbour_3_list)
                     neighbour_4 = tuple(neighbour_4_list)

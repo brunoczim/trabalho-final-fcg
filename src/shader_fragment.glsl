@@ -8,7 +8,7 @@ in vec4 position_world;
 in vec4 normal;
 
 // Posição do vértice atual no sistema de coordenadas local do modelo.
-in vec4 position_model;
+flat in vec4 position_model;
 
 // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 in vec2 texcoords;
@@ -79,6 +79,9 @@ void main()
 
     U += 0.5;
     V += 0.5;
+
+    U = (floor(U * 16.0f)) / 16.0f;
+    V = (floor(V * 16.0f)) / 16.0f;
 
 
     // Obtemos a refletância difusa a partir da leitura da imagem stone_texture_image

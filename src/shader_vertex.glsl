@@ -16,7 +16,7 @@ uniform mat4 projection;
 // para cada fragmento, os quais serão recebidos como entrada pelo Fragment
 // Shader. Veja o arquivo "shader_fragment.glsl".
 out vec4 position_world;
-out vec4 position_model;
+flat out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
 

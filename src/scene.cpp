@@ -263,7 +263,7 @@ void ObjModel::NewIntoVirtualScene(
 
 VirtualScene::VirtualScene()
 {
-    ObjModel::NewIntoVirtualScene(*this, "../../data/block.obj");
+    ObjModel::NewIntoVirtualScene(*this, "../../data/block2.obj");
 }
 
 void VirtualScene::insert(SceneObject new_scene_object)
