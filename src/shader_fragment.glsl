@@ -67,21 +67,21 @@ void main()
     float V = 0.0;
     // Coordenadas de textura do plano, obtidas do arquivo OBJ.
     if (abs(position_model.x) == 0.5) {
-        U = position_model.y;
-        V = position_model.z;
+        U = position_model.z;
+        V = position_model.y;
     } else if (abs(position_model.y) == 0.5) {
-        U = position_model.x;
-        V = position_model.z;
-    } else if (abs(position_model.z) == 0.5) {
-        U = position_model.y;
+        U = position_model.z;
         V = position_model.x;
+    } else if (abs(position_model.z) == 0.5) {
+        U = position_model.x;
+        V = position_model.y;
     }
 
     U += 0.5;
     V += 0.5;
 
-    U = (floor(U * 16.0f)) / 16.0f;
-    V = (floor(V * 16.0f)) / 16.0f;
+    U = (floor(U * 17.0f) - 0.5) / 16.0f;
+    V = (floor(V * 17.0f) - 0.5) / 16.0f;
 
 
     // Obtemos a refletância difusa a partir da leitura da imagem stone_texture_image
