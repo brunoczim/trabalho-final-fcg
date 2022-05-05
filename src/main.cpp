@@ -51,6 +51,8 @@ bool g_ShowInfoText = true;
 double g_LastCursorPosX, g_LastCursorPosY;
 
 Camera g_Camera;
+MatrixStack matrixStack;
+WorldBlockMatrix worldBlockMatrix;
 
 int main(int argc, char const *argv[])
 {
@@ -130,6 +132,12 @@ int main(int argc, char const *argv[])
     glEnable(GL_DEPTH_TEST);
 
     VirtualScene virtual_scene;
+    for(int i = 0;i<256;i++){
+        for(int j = 0;j<256;j++){
+            worldBlockMatrix.setPoint(i,0,j,BLOCK_STONE);
+            //worldBlockMatrix[i][0][j] = BLOCK_STONE;
+        }
+    }
 
     while (!glfwWindowShouldClose(window)) {
         // Aqui executamos as operações de renderização
@@ -156,8 +164,34 @@ int main(int argc, char const *argv[])
 
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE , glm::value_ptr(projection));
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
-        virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
+
+        //Renderiza os blocos do chao
+
+        for(int i = 0;i<256;i++){
+            for(int j = 0;j<256;j++)
+                {
+                if(worldBlockMatrix.getPoint(i,0,j) == BLOCK_STONE){
+                    model = Matrix_Translate(i,0,j);
+                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
+                    virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
+                }
+            }
+        }
+
+        /*
+        for(int i = 0;i<256;i++){
+            for(int j = 0;j<256;j++){
+                for(int k = 0;k<256;k++){
+                    if(worldBlockMatrix.getPoint(i,j,k) == BLOCK_STONE){
+                    model = Matrix_Translate(i,j,k);
+                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
+                    virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
+                    }
+                }
+            }
+        }
+        */
+
 
 
         // O framebuffer onde OpenGL executa as operações de renderização não

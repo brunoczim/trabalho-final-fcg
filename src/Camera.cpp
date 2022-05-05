@@ -4,7 +4,7 @@
 
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
-    center_point(-4.0f, 0.0f, -1.5f, 1.0f),
+    center_point(4.0f, 1.0f, 1.5f, 1.0f),
     view_theta(1.2f),
     view_phi(0.0f),
     view_rho(2.5f),

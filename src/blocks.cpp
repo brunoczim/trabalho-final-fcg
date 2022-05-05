@@ -40,3 +40,10 @@ Block const &WorldBlockMatrix::operator [] (glm::vec3 point) const
 {
     return (*this)[WorldPoint(point)];
 }
+Block WorldBlockMatrix::getPoint(int x,int y,int z){
+    return this->blocks[x][y][z];
+}
+
+void WorldBlockMatrix::setPoint(int x,int y,int z, Block blockType){
+    this->blocks[x][y][z] = blockType;
+}

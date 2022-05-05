@@ -41,6 +41,9 @@ public:
     Block const &operator [] (glm::vec3 point) const;
 
     Block const &operator [] (WorldPoint point) const;
+
+    Block getPoint(int x, int y,int z);
+    void setPoint(int x, int y,int z,Block blockType);
 };
 
 #endif // BLOCK_HPP
