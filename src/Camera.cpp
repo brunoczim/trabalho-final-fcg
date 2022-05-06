@@ -127,9 +127,9 @@ glm::mat4 Camera::ViewMatrix() const
 
 glm::mat4 Camera::ProjectionMatrix() const
 {
-    float t = this->nearplane* tan(this->field_of_view/2);
+    float t = 1.5f*this->screen_ratio/2.5f;
     float b = -t;
-    float r = t * this->screen_ratio;
+    float r = t*this->screen_ratio;
     float l = -r;
 
     switch (this->projection_type) {
