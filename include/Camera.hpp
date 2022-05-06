@@ -43,6 +43,8 @@ private:
     float farplane;
     float field_of_view_ratio;
     float screen_ratio;
+    float field_of_view;
+
 
     glm::vec4 ViewVector() const;
     glm::vec4 UVector() const;

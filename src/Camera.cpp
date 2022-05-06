@@ -1,12 +1,12 @@
 #include "Camera.hpp"
 #include "matrices.hpp"
 #include <stdexcept>
-
+float pi = acos(-1.0f);
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
     center_point(4.0f, 1.0f, 1.5f, 1.0f),
-    view_theta(1.2f),
-    view_phi(0.0f),
+    view_theta(3.1415f),
+    view_phi(1.5f),
     view_rho(2.5f),
     up_vector(0.0f, 1.0f, 0.0f, 0.0f),
     move_speed(0.05f),
@@ -15,36 +15,32 @@ Camera::Camera():
     nearplane(-0.1f),
     farplane(-10.0f),
     field_of_view_ratio(50.0f),
-    screen_ratio(1.0f)
+    screen_ratio(1.0f),
+    field_of_view(pi/2)
+
 {
 }
+
 
 void Camera::RotateViewTheta(int dx)
 {
     this->view_theta -= this->rotate_speed * dx;
 
-    float pi = acos(-1.0f);
-
-    while (this->view_theta > 2.0f * pi) {
-        this->view_theta -= 2.0f * pi;
-    }
-    while (this->view_theta < -2.0f * pi) {
-        this->view_theta += 2.0f * pi;
-    }
 }
 
 void Camera::RotateViewPhi(int dy)
 {
-    this->view_phi -= this->rotate_speed * dy;
 
-    float pi = acos(-1.0f);
+    this->view_phi += this->rotate_speed*dy;
 
-    while (this->view_phi > 2.0f * pi) {
-        this->view_phi -= 2.0f * pi;
-    }
-    while (this->view_phi < -2.0f * pi) {
-        this->view_phi += 2.0f * pi;
-    }
+    float phimax = 3.141592f/2;
+    float phimin = -phimax;
+
+    if (view_phi > phimax)
+        this->view_phi = phimax;
+
+    if (view_phi < phimin)
+        this->view_phi = phimin;
 }
 
 #include <iostream>
@@ -101,12 +97,10 @@ void Camera::Zoom(float factor)
 
 glm::vec4 Camera::ViewVector() const
 {
-    return glm::vec4(
-        this->view_rho * sin(this->view_theta) * cos(this->view_phi),
-        this->view_rho * sin(this->view_theta) * sin(this->view_phi),
-        this->view_rho * cos(this->view_theta),
-        0.0f
-    );
+        float yViewVec = -sin(this->view_phi);
+        float zViewVec = cos(this->view_phi)*cos(this->view_theta);
+        float xViewVec = cos(this->view_phi)*sin(this->view_theta);
+        return glm::vec4(xViewVec,yViewVec,zViewVec,0.0f);
 }
 
 glm::vec4 Camera::UVector() const
@@ -133,15 +127,14 @@ glm::mat4 Camera::ViewMatrix() const
 
 glm::mat4 Camera::ProjectionMatrix() const
 {
-    float t = 1.5f * this->view_rho / 2.5f;
+    float t = this->nearplane* tan(this->field_of_view/2);
     float b = -t;
     float r = t * this->screen_ratio;
     float l = -r;
-    float field_of_view = atanf(this->view_rho / this->field_of_view_ratio / fabs(this->nearplane))  * 2.0f;
 
     switch (this->projection_type) {
     case PERSPECTIVE_PROJ:
-        return Matrix_Perspective(field_of_view, this->screen_ratio, this->nearplane, this->farplane);
+        return Matrix_Perspective(this->field_of_view, this->screen_ratio, this->nearplane, this->farplane);
     case ORTHOGRAPHIC_PROJ:
         return Matrix_Orthographic(l, r, b, t, this->nearplane, this->farplane);
     default:
