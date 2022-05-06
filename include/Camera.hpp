@@ -41,7 +41,6 @@ private:
     float zoom_speed;
     float nearplane;
     float farplane;
-    float field_of_view_ratio;
     float screen_ratio;
     float field_of_view;
 

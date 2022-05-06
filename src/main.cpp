@@ -1,4 +1,4 @@
-#include "blocks.hpp"
+
 #include "gpu.hpp"
 #include <iostream>
 #include <fstream>
@@ -20,6 +20,8 @@
 #include "Camera.hpp"
 #include "scene.hpp"
 #include "stb_image.h"
+#include "blocks.hpp"
+
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ErrorCallback(int error, const char* description);
@@ -53,7 +55,6 @@ double g_LastCursorPosX, g_LastCursorPosY;
 Camera g_Camera;
 MatrixStack matrixStack;
 WorldBlockMatrix worldBlockMatrix;
-
 int main(int argc, char const *argv[])
 {
     int success = glfwInit();
@@ -132,12 +133,9 @@ int main(int argc, char const *argv[])
     glEnable(GL_DEPTH_TEST);
 
     VirtualScene virtual_scene;
-    for(int i = 0;i<256;i++){
-        for(int j = 0;j<256;j++){
-            worldBlockMatrix.setPoint(i,0,j,BLOCK_STONE);
-            //worldBlockMatrix[i][0][j] = BLOCK_STONE;
-        }
-    }
+
+
+
 
     while (!glfwWindowShouldClose(window)) {
         // Aqui executamos as operações de renderização
@@ -167,18 +165,20 @@ int main(int argc, char const *argv[])
 
         //Renderiza os blocos do chao
 
-        for(int i = 0;i<256;i++){
-            for(int j = 0;j<256;j++)
-                {
-                if(worldBlockMatrix.getPoint(i,0,j) == BLOCK_STONE){
-                    model = Matrix_Translate(i,0,j);
+        for(size_t x = 0;x<WORLD_SIZE_X;x++){
+            for(size_t y = 0;y<WORLD_SIZE_Y;y++){
+                for(size_t z = 0;z<WORLD_SIZE_Z;z++){
+                    if(worldBlockMatrix[WorldPoint(x,y,z)] == BLOCK_STONE){
+                    model = Matrix_Translate(x,y,z);
                     glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
                     virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
+                    }
                 }
             }
         }
 
-        /*
+
+       /*
         for(int i = 0;i<256;i++){
             for(int j = 0;j<256;j++){
                 for(int k = 0;k<256;k++){
@@ -191,6 +191,8 @@ int main(int argc, char const *argv[])
             }
         }
         */
+
+
 
 
 

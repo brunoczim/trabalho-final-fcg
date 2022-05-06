@@ -4,9 +4,9 @@
 float pi = acos(-1.0f);
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
-    center_point(4.0f, 1.0f, 1.5f, 1.0f),
-    view_theta(3.1415f),
-    view_phi(1.5f),
+    center_point(50.0f, 71.0f, 51.5f, 1.0f),
+    view_theta(0.0f),
+    view_phi(0.0f),
     view_rho(2.5f),
     up_vector(0.0f, 1.0f, 0.0f, 0.0f),
     move_speed(0.05f),
@@ -14,7 +14,6 @@ Camera::Camera():
     zoom_speed(0.1f),
     nearplane(-0.1f),
     farplane(-10.0f),
-    field_of_view_ratio(50.0f),
     screen_ratio(1.0f),
     field_of_view(pi/2)
 
@@ -83,6 +82,7 @@ void Camera::Zoom(float factor)
     // Atualizamos a distância da câmera para a origem utilizando a
     // movimentação da "rodinha", simulando um ZOOM.
     this->view_rho -= this->zoom_speed * factor;
+    this->field_of_view * factor;
 
     // Uma câmera look-at nunca pode estar exatamente "em cima" do ponto para
     // onde ela está olhando, pois isto gera problemas de divisão por zero na

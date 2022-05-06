@@ -3,9 +3,9 @@
 
 #include <glm/vec3.hpp>
 
-#define WORLD_SIZE_X 256
+#define WORLD_SIZE_X 128
 #define WORLD_SIZE_Y 128
-#define WORLD_SIZE_Z 256
+#define WORLD_SIZE_Z 128
 
 enum Block {
     BLOCK_AIR,
@@ -34,16 +34,27 @@ public:
 
     static const WorldPoint SIZE;
 
-    Block &operator [] (glm::vec3 point);
+    inline Block &operator [] (WorldPoint point)
+    {
+        return this->blocks[point.x][point.y][point.z];
+    }
 
-    Block &operator [] (WorldPoint point);
+    inline Block &operator [] (glm::vec3 point)
+    {
+        return (*this)[WorldPoint(point)];
+    }
 
-    Block const &operator [] (glm::vec3 point) const;
+    inline Block const &operator [] (WorldPoint point) const
+    {
+        return this->blocks[point.x][point.y][point.z];
+    }
 
-    Block const &operator [] (WorldPoint point) const;
+    inline Block const &operator [] (glm::vec3 point) const
+    {
+        return (*this)[WorldPoint(point)];
+    }
 
-    Block getPoint(int x, int y,int z);
-    void setPoint(int x, int y,int z,Block blockType);
+
 };
 
 #endif // BLOCK_HPP

@@ -19,31 +19,14 @@ glm::vec3 WorldPoint::ToGlm()
 
 WorldBlockMatrix::WorldBlockMatrix(): blocks { BLOCK_AIR }
 {
+    for(size_t x = 0;x<WORLD_SIZE_X;x++){
+        for(size_t y = 0;y<WORLD_SIZE_Y/2;y++){
+            for(size_t z = 0;z<WORLD_SIZE_Z;z++){
+                (*this)[WorldPoint(x,y,z)] = BLOCK_STONE;
+            }
+        }
+    }
 }
 
-Block &WorldBlockMatrix::operator [] (WorldPoint point)
-{
-    return this->blocks[point.x][point.y][point.z];
-}
 
-Block &WorldBlockMatrix::operator [] (glm::vec3 point)
-{
-    return (*this)[WorldPoint(point)];
-}
 
-Block const &WorldBlockMatrix::operator [] (WorldPoint point) const
-{
-    return this->blocks[point.x][point.y][point.z];
-}
-
-Block const &WorldBlockMatrix::operator [] (glm::vec3 point) const
-{
-    return (*this)[WorldPoint(point)];
-}
-Block WorldBlockMatrix::getPoint(int x,int y,int z){
-    return this->blocks[x][y][z];
-}
-
-void WorldBlockMatrix::setPoint(int x,int y,int z, Block blockType){
-    this->blocks[x][y][z] = blockType;
-}
