@@ -1,36 +1,35 @@
 #include "Camera.hpp"
 #include "matrices.hpp"
+#include "blocks.hpp"
 #include <stdexcept>
+
 float pi = acos(-1.0f);
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
-    center_point(50.0f, 71.0f, 51.5f, 1.0f),
+    center_point(2.0f, WORLD_SIZE_Y / 2.0f + 1.5f, 2.0f, 1.0f),
     view_theta(0.0f),
     view_phi(0.0f),
     view_rho(2.5f),
     up_vector(0.0f, 1.0f, 0.0f, 0.0f),
-    move_speed(0.05f),
-    rotate_speed(0.01f),
+    move_speed(0.1f),
+    rotate_speed(0.005f),
     zoom_speed(0.1f),
     nearplane(-0.1f),
     farplane(-10.0f),
     screen_ratio(1.0f),
     field_of_view(pi/2)
-
 {
 }
 
-
-void Camera::RotateViewTheta(int dx)
+void Camera::RotateViewTheta(float dx)
 {
     this->view_theta -= this->rotate_speed * dx;
-
 }
 
-void Camera::RotateViewPhi(int dy)
+void Camera::RotateViewPhi(float dy)
 {
 
-    this->view_phi += this->rotate_speed*dy;
+    this->view_phi += this->rotate_speed * dy;
 
     float phimax = 3.141592f/2;
     float phimin = -phimax;
@@ -42,34 +41,24 @@ void Camera::RotateViewPhi(int dy)
         this->view_phi = phimin;
 }
 
-#include <iostream>
-
 void Camera::MoveForewards()
 {
-    this->center_point += -this->WVector() * this->move_speed;
-    std::cout << "Camera position: " << std::endl;
-    PrintVector(this->center_point);
+    this->center_point += -this->WVectorProjectedToXZ() * this->move_speed;
 }
 
 void Camera::MoveBackwards()
 {
-    this->center_point += this->WVector() * this->move_speed;
-    std::cout << "Camera position: " << std::endl;
-    PrintVector(this->center_point);
+    this->center_point += this->WVectorProjectedToXZ() * this->move_speed;
 }
 
 void Camera::MoveLeftwards()
 {
-    this->center_point += -this->UVector() * this->move_speed;
-    std::cout << "Camera position: " << std::endl;
-    PrintVector(this->center_point);
+    this->center_point += -this->UVector() * glm::vec4(1.0f, 0.0f, 1.0f, 1.0f) * this->move_speed;
 }
 
 void Camera::MoveRightwards()
 {
-    this->center_point += this->UVector() * this->move_speed;
-    std::cout << "Camera position: " << std::endl;
-    PrintVector(this->center_point);
+    this->center_point += this->UVector() * glm::vec4(1.0f, 0.0f, 1.0f, 1.0f) * this->move_speed;
 }
 
 void Camera::SetProjectionType(ProjectionType projection_type)
@@ -95,6 +84,11 @@ void Camera::Zoom(float factor)
     }
 }
 
+glm::vec4 Camera::CenterPoint() const
+{
+    return this->center_point;
+}
+
 glm::vec4 Camera::ViewVector() const
 {
         float yViewVec = -sin(this->view_phi);
@@ -113,6 +107,13 @@ glm::vec4 Camera::WVector() const
 {
     glm::vec4 vector = -this->ViewVector();
     return vector * (1.0f / norm(vector));
+}
+
+glm::vec4 Camera::WVectorProjectedToXZ() const
+{
+    glm::vec4 w_vector = this->WVector();
+    w_vector.y = 0.0f;
+    return w_vector / norm(w_vector);
 }
 
 void Camera::OnScreenResize(int width, int height)

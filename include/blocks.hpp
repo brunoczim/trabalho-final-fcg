@@ -3,9 +3,9 @@
 
 #include <glm/vec3.hpp>
 
-#define WORLD_SIZE_X 128
-#define WORLD_SIZE_Y 128
-#define WORLD_SIZE_Z 128
+#define WORLD_SIZE_X 32
+#define WORLD_SIZE_Y 32
+#define WORLD_SIZE_Z 32
 
 enum Block {
     BLOCK_AIR,

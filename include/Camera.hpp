@@ -14,8 +14,8 @@ public:
 
     Camera();
 
-    void RotateViewTheta(int dx);
-    void RotateViewPhi(int dy);
+    void RotateViewTheta(float dx);
+    void RotateViewPhi(float dy);
 
     void MoveForewards();
     void MoveBackwards();
@@ -26,6 +26,8 @@ public:
     void SetProjectionType(ProjectionType projection_type);
     void Zoom(float factor);
 
+    glm::vec4 CenterPoint() const;
+    glm::vec4 ViewVector() const;
     glm::mat4 ViewMatrix() const;
     glm::mat4 ProjectionMatrix() const;
 
@@ -44,10 +46,9 @@ private:
     float screen_ratio;
     float field_of_view;
 
-
-    glm::vec4 ViewVector() const;
     glm::vec4 UVector() const;
     glm::vec4 WVector() const;
+    glm::vec4 WVectorProjectedToXZ() const;
 };
 
 #endif // CAMERA_HPP
