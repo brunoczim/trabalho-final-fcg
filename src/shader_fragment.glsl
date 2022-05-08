@@ -19,9 +19,7 @@ uniform mat4 view;
 uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
-#define SPHERE 0
-#define BUNNY  1
-#define PLANE  2
+#define OBJ_BLOCK 0
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -29,7 +27,7 @@ uniform vec4 bbox_min;
 uniform vec4 bbox_max;
 
 // Variáveis para acesso das imagens de textura
-uniform sampler2D stone_texture_image;
+uniform sampler2D selected_texture;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -65,27 +63,29 @@ void main()
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
-    // Coordenadas de textura do plano, obtidas do arquivo OBJ.
-    if (abs(position_model.x) == 0.5) {
-        U = position_model.z;
-        V = position_model.y;
-    } else if (abs(position_model.y) == 0.5) {
-        U = position_model.z;
-        V = position_model.x;
-    } else if (abs(position_model.z) == 0.5) {
-        U = position_model.x;
-        V = position_model.y;
+
+    if (object_id == OBJ_BLOCK) {
+        // Coordenadas de textura do bloco, obtidas do arquivo OBJ.
+        if (abs(position_model.x) == 0.5) {
+            U = position_model.z;
+            V = position_model.y;
+        } else if (abs(position_model.y) == 0.5) {
+            U = position_model.z;
+            V = position_model.x;
+        } else if (abs(position_model.z) == 0.5) {
+            U = position_model.x;
+            V = position_model.y;
+        }
+
+        U += 0.5;
+        V += 0.5;
+
+        U = (floor(U * 16.0f) - 0.5) / 16.0f;
+        V = (floor(V * 16.0f) - 0.5) / 16.0f;
     }
 
-    U += 0.5;
-    V += 0.5;
-
-    U = (floor(U * 16.0f) - 0.5) / 16.0f;
-    V = (floor(V * 16.0f) - 0.5) / 16.0f;
-
-
-    // Obtemos a refletância difusa a partir da leitura da imagem stone_texture_image
-    vec3 Kd = texture(stone_texture_image, vec2(U,V)).rgb;
+    // Obtemos a refletância difusa a partir da leitura da imagem selecionada
+    vec3 Kd = texture(selected_texture, vec2(U,V)).rgb;
 
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));

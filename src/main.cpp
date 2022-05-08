@@ -23,7 +23,9 @@
 #include "blocks.hpp"
 #include "collisions.hpp"
 
+#define OBJ_BLOCK 0
 
+#define TEXTURE_STONE 0
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ErrorCallback(int error, const char* description);
@@ -49,7 +51,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 void LoadShader(const char* filename, GLuint shader_id);
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
-GLFWwindow *CreateWindow(void);
+GLFWwindow *CreateGLFWWindow(void);
 void SetupInputCallbacks(GLFWwindow *window);
 void PrintGlInfo();
 void SetupFramebufferSize(GLFWwindow *window);
@@ -78,7 +80,7 @@ int main(int argc, char const *argv[])
     // Definimos o callback para impressão de erros da GLFW no terminal
     glfwSetErrorCallback(ErrorCallback);
 
-    GLFWwindow *window = CreateWindow();
+    GLFWwindow *window = CreateGLFWWindow();
     if (!window)
     {
         glfwTerminate();
@@ -135,11 +137,13 @@ int main(int argc, char const *argv[])
     // Buscamos o endereço das variáveis definidas dentro do Vertex Shader.
     // Utilizaremos estas variáveis para enviar dados para a placa de vídeo
     // (GPU)! Veja arquivo "shader_vertex.glsl".
-    GLint model_uniform           = glGetUniformLocation(program_id, "model"); // Variável da matriz "model"
-    GLint view_uniform            = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
-    GLint projection_uniform      = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
-    GLint bbox_min_uniform        = glGetUniformLocation(program_id, "bbox_min");
-    GLint bbox_max_uniform        = glGetUniformLocation(program_id, "bbox_max");
+    GLint model_uniform             = glGetUniformLocation(program_id, "model"); // Variável da matriz "model"
+    GLint view_uniform              = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
+    GLint projection_uniform        = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
+    GLint object_id_uniform         = glGetUniformLocation(program_id, "object_id");
+    GLint selected_texture_uniform  = glGetUniformLocation(program_id, "selected_texture");
+    GLint bbox_min_uniform          = glGetUniformLocation(program_id, "bbox_min");
+    GLint bbox_max_uniform          = glGetUniformLocation(program_id, "bbox_max");
 
 
     // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.2
@@ -177,14 +181,16 @@ int main(int argc, char const *argv[])
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE , glm::value_ptr(projection));
 
         //Renderiza os blocos do chao
+        glUniform1i(object_id_uniform, OBJ_BLOCK);
 
-        for(size_t x = 0;x<WORLD_SIZE_X;x++){
-            for(size_t y = 0;y<WORLD_SIZE_Y;y++){
-                for(size_t z = 0;z<WORLD_SIZE_Z;z++){
-                    if(g_WorldBlockMatrix[WorldPoint(x,y,z)] == BLOCK_STONE){
-                    model = Matrix_Translate(x,y,z);
-                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
-                    virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
+        for (size_t x = 0; x < WORLD_SIZE_X; x++) {
+            for (size_t y = 0; y < WORLD_SIZE_Y; y++) {
+                for (size_t z = 0; z < WORLD_SIZE_Z; z++) {
+                    if (g_WorldBlockMatrix[WorldPoint(x,y,z)] == BLOCK_STONE) {
+                        glUniform1i(selected_texture_uniform, stone_texture_id);
+                        model = Matrix_Translate(x,y,z);
+                        glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
+                        virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
                     }
                 }
             }
@@ -351,8 +357,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         }
     }
 
-    float delta = 3.141592 / 16; // 22.5 graus, em radianos.
-
     //Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
     if (key == GLFW_KEY_P && action == GLFW_PRESS) {
         g_Camera.SetProjectionType(Camera::PERSPECTIVE_PROJ);
@@ -486,7 +490,7 @@ void LoadShader(const char* filename, GLuint shader_id)
     delete [] log;
 }
 
-GLFWwindow *CreateWindow(void)
+GLFWwindow *CreateGLFWWindow(void)
 {
         // Pedimos para utilizar OpenGL versão 3.3 (ou superior)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
