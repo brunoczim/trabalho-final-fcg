@@ -58,3 +58,22 @@ bool FacingNonAirBlock(CollisionFace &output, Camera const &camera, WorldBlockMa
 
     return block_selected;
 }
+
+bool coordenadaCruza(glm::vec3 a,float tA, glm::vec3 b, float tB, int axis){
+    if((a[axis] > b[axis])&&(a[axis] - tA < b[axis] + tB)){
+        return true;
+    }
+        if((a[axis] < b[axis])&&(a[axis] + tA > b[axis] - tB)){
+        return true;
+    }
+    return false;
+}
+
+bool colisaoCuboCubo(glm::vec3 centroCubo1, float t1, glm::vec3 centroCubo2, float t2){
+    for(int axis = 0;axis < 3;axis++){
+        if(coordenadaCruza(centroCubo1,t1,centroCubo2,t2,axis) == false){
+            return false;
+        }
+    }
+    return true;
+}

@@ -189,7 +189,11 @@ int main(int argc, char const *argv[])
                 }
             }
         }
-
+        if(colisaoCuboCubo(g_Camera.CenterPoint(),0.5,glm::vec3(0,16,0),0.5)){
+            std::cout<<"Colidiu com :";
+            PrintVector(glm::vec4(0,16,0,1));
+            std::cout<<std::endl;
+        }
 
        /*
         for(int i = 0;i<256;i++){
