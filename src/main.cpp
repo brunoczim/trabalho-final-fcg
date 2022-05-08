@@ -198,9 +198,16 @@ int main(int argc, char const *argv[])
                 }
             }
         }
-        if(colisaoCuboCubo(g_Camera.CenterPoint(),0.5,glm::vec3(0,16,0),0.5)){
-            std::cout<<"Colidiu com :";
-            PrintVector(glm::vec4(0,16,0,1));
+        if(colisaoCuboCubo(g_Camera.CenterPoint(),0.5,glm::vec3(0,17,0),0.5)){
+            PrintVector(g_Camera.CenterPoint());
+            std::cout<<"  Colidiu com :";
+            PrintVector(glm::vec4(0,17,0,1));
+            std::cout<<std::endl;
+        }
+
+        if(colisaoCuboPlanoOrdinais(g_Camera.CenterPoint(),0.5,1,18.0)){
+            PrintVector(g_Camera.CenterPoint());
+            std::cout<<"  Colidiu com :";
             std::cout<<std::endl;
         }
 
@@ -361,6 +368,10 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
             g_Camera.MoveLeftwards();
         } else if (key == GLFW_KEY_D) {
             g_Camera.MoveRightwards();
+        }else if (key == GLFW_KEY_SPACE) {
+            g_Camera.MoveUpwards();
+        }else if (key == GLFW_KEY_F) {
+            g_Camera.MoveDownwards();
         }
     }
 

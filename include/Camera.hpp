@@ -21,6 +21,8 @@ public:
     void MoveBackwards();
     void MoveLeftwards();
     void MoveRightwards();
+    void MoveUpwards();
+    void MoveDownwards();
 
     void OnScreenResize(int width, int height);
     void SetProjectionType(ProjectionType projection_type);
@@ -45,6 +47,7 @@ private:
     float farplane;
     float screen_ratio;
     float field_of_view;
+    float tamanho;//é o taamanho de metade do lado do cubo que envolve a camera
 
     glm::vec4 UVector() const;
     glm::vec4 WVector() const;

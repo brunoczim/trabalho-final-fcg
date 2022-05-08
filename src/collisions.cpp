@@ -2,6 +2,7 @@
 #include "matrices.hpp"
 #include <cmath>
 #include <iostream>
+#include "blocks.hpp"
 
 bool FacingNonAirBlock(CollisionFace &output, Camera const &camera, WorldBlockMatrix const &world_block_matrix)
 {
@@ -59,11 +60,25 @@ bool FacingNonAirBlock(CollisionFace &output, Camera const &camera, WorldBlockMa
     return block_selected;
 }
 
+bool IsPointInWorld(glm::vec3 point){
+    return (point.x > -0.5
+             && point.y > -0.5
+             && point.z > -0.5
+             && point.x < WORLD_SIZE_X -0.5
+             && point.y < WORLD_SIZE_Y -0.5
+             && point.z < WORLD_SIZE_Z -0.5
+              );
+
+}
+
 bool coordenadaCruza(glm::vec3 a,float tA, glm::vec3 b, float tB, int axis){
     if((a[axis] > b[axis])&&(a[axis] - tA < b[axis] + tB)){
         return true;
     }
-        if((a[axis] < b[axis])&&(a[axis] + tA > b[axis] - tB)){
+    if((a[axis] < b[axis])&&(a[axis] + tA > b[axis] - tB)){
+        return true;
+    }
+    if(a[axis]==b[axis]){
         return true;
     }
     return false;
@@ -77,3 +92,17 @@ bool colisaoCuboCubo(glm::vec3 centroCubo1, float t1, glm::vec3 centroCubo2, flo
     }
     return true;
 }
+
+bool colisaoCuboPlanoOrdinais(glm::vec3 centroCubo, float t, int axis, float coordAxis){
+    if((centroCubo[axis] > coordAxis)&&(centroCubo[axis] - t < coordAxis)){
+        return true;
+    }
+    if((centroCubo[axis] < coordAxis)&&(centroCubo[axis] + t > coordAxis)){
+        return true;
+    }
+    if(centroCubo[axis]==coordAxis){
+        return true;
+    }
+    return false;
+}
+

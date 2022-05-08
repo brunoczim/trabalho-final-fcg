@@ -6,18 +6,19 @@
 float pi = acos(-1.0f);
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
-    center_point(4.0f, WORLD_SIZE_Y / 2.0f + 2.0f, 4.0f, 1.0f),
+    center_point(4.0f, WORLD_SIZE_Y / 2.0f + 1.0f, 4.0f, 1.0f),
     view_theta(0.0f),
     view_phi(0.0f),
     view_rho(2.5f),
     up_vector(0.0f, 1.0f, 0.0f, 0.0f),
-    move_speed(0.1f),
+    move_speed(0.10001f),
     rotate_speed(0.005f),
     zoom_speed(0.1f),
     nearplane(-0.1f),
     farplane(-10.0f),
     screen_ratio(1.0f),
-    field_of_view(pi/2)
+    field_of_view(pi/2),
+    tamanho(0.5f)
 {
 }
 
@@ -51,6 +52,7 @@ void Camera::MoveBackwards()
     this->center_point += this->WVectorProjectedToXZ() * this->move_speed;
 }
 
+
 void Camera::MoveLeftwards()
 {
     this->center_point += -this->UVector() * glm::vec4(1.0f, 0.0f, 1.0f, 1.0f) * this->move_speed;
@@ -59,6 +61,16 @@ void Camera::MoveLeftwards()
 void Camera::MoveRightwards()
 {
     this->center_point += this->UVector() * glm::vec4(1.0f, 0.0f, 1.0f, 1.0f) * this->move_speed;
+}
+
+void Camera::MoveUpwards()
+{
+    this->center_point += glm::vec4(0,1,0,0) * this->move_speed;
+}
+
+void Camera::MoveDownwards()
+{
+    this->center_point -= glm::vec4(0,1,0,0) * this->move_speed;
 }
 
 void Camera::SetProjectionType(ProjectionType projection_type)
