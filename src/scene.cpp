@@ -266,6 +266,7 @@ VirtualScene::VirtualScene()
     ObjModel::NewIntoVirtualScene(*this, "../../data/block.obj");
 }
 
+
 void VirtualScene::insert(SceneObject new_scene_object)
 {
     auto find_iter = this->objects.find(new_scene_object.name.c_str());

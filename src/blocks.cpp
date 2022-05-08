@@ -28,5 +28,16 @@ WorldBlockMatrix::WorldBlockMatrix(): blocks { BLOCK_AIR }
     }
 }
 
+bool WorldBlockMatrix::IsPointInWorld(glm::vec3 point)const{
+    return (point.x > -0.5
+             && point.y > -0.5
+             && point.z > -0.5
+             && point.x < WORLD_SIZE_X -0.5
+             && point.y < WORLD_SIZE_Y -0.5
+             && point.z < WORLD_SIZE_Z -0.5
+              );
+
+}
+
 
 

@@ -8,6 +8,7 @@ bool FacingNonAirBlock(CollisionFace &output, Camera const &camera, WorldBlockMa
     float max_distance = 5.0f;
     float total_distance = 0.0f;
     bool block_selected = false;
+    bool pointInWorld = true;
 
     glm::vec4 view_vector = camera.ViewVector() / norm(camera.ViewVector());
     glm::vec4 target_point = camera.CenterPoint();
@@ -16,7 +17,7 @@ bool FacingNonAirBlock(CollisionFace &output, Camera const &camera, WorldBlockMa
     glm::vec4 distances = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     size_t min_axis = 0;
 
-    while (total_distance < max_distance && !block_selected) {
+    while (total_distance < max_distance && !block_selected && pointInWorld) {
         min_axis = 0;
         distances = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -43,16 +44,17 @@ bool FacingNonAirBlock(CollisionFace &output, Camera const &camera, WorldBlockMa
 
         target_point = target_point + distances[min_axis] * view_vector;
         total_distance += norm(distances[min_axis] * view_vector);
-        matrix_position = target_point;
-        matrix_position[min_axis] += view_vector[min_axis] / abs(view_vector[min_axis]) * 0.01f;
-        block_selected = world_block_matrix[target_point] != BLOCK_AIR;
-        std::cout<<total_distance<<std::endl;
+        pointInWorld = world_block_matrix.IsPointInWorld(target_point);
+        if(pointInWorld){
+            block_selected = world_block_matrix[target_point] != BLOCK_AIR;
+        }
     }
 
-    if (block_selected) {
+    if (block_selected && pointInWorld) {
         output.block_position = target_point;
         output.axis = min_axis;
         output.sign = view_vector[min_axis]/fabs(view_vector[min_axis]);
     }
+
     return block_selected;
 }

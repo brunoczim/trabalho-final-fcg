@@ -54,6 +54,8 @@ public:
         return (*this)[WorldPoint(point)];
     }
 
+    bool IsPointInWorld(glm::vec3 point)const;
+
 
 };
 
