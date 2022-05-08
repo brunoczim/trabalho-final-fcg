@@ -108,7 +108,6 @@
 		<Unit filename="include/GLFW/glfw3native.h" />
 		<Unit filename="include/KHR/khrplatform.h" />
 		<Unit filename="include/MatrixStack.hpp" />
-		<Unit filename="include/Player.hpp" />
 		<Unit filename="include/blocks.hpp" />
 		<Unit filename="include/collisions.hpp" />
 		<Unit filename="include/dejavufont.h" />
@@ -383,7 +382,6 @@
 		<Unit filename="include/utils.h" />
 		<Unit filename="src/Camera.cpp" />
 		<Unit filename="src/MatrixStack.cpp" />
-		<Unit filename="src/Player.cpp" />
 		<Unit filename="src/blocks.cpp" />
 		<Unit filename="src/collisions.cpp" />
 		<Unit filename="src/glad.c">

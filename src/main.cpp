@@ -49,28 +49,21 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 void LoadShader(const char* filename, GLuint shader_id);
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
-GLFWwindow *createWindow(void);
-void setupInputCallbacks(GLFWwindow *window);
-void printGlInfo();
-void setupFramebufferSize(GLFWwindow *window);
+GLFWwindow *CreateWindow(void);
+void SetupInputCallbacks(GLFWwindow *window);
+void PrintGlInfo();
+void SetupFramebufferSize(GLFWwindow *window);
+
+void CorrectCursorPos(GLFWwindow *window, int *out_window_center_x = NULL, int *out_window_center_y = NULL);
 
 GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id);
-
-// "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
-// pressionado no momento atual. Veja função MouseButtonCallback().
-bool g_LeftMouseButtonPressed = false;
 
 // Variável que controla se o texto informativo será mostrado na tela.
 bool g_ShowInfoText = true;
 
-// Variáveis globais que armazenam a última posição do cursor do mouse, para
-// que possamos calcular quanto que o mouse se movimentou entre dois instantes
-// de tempo. Utilizadas no callback CursorPosCallback() abaixo.
-double g_LastCursorPosX, g_LastCursorPosY;
-
 Camera g_Camera;
-MatrixStack matrixStack;
-WorldBlockMatrix worldBlockMatrix;
+MatrixStack g_MatrixStack;
+WorldBlockMatrix g_WorldBlockMatrix;
 
 
 int main(int argc, char const *argv[])
@@ -85,7 +78,7 @@ int main(int argc, char const *argv[])
     // Definimos o callback para impressão de erros da GLFW no terminal
     glfwSetErrorCallback(ErrorCallback);
 
-    GLFWwindow *window = createWindow();
+    GLFWwindow *window = CreateWindow();
     if (!window)
     {
         glfwTerminate();
@@ -93,7 +86,7 @@ int main(int argc, char const *argv[])
         std::exit(EXIT_FAILURE);
     }
 
-    setupInputCallbacks(window);
+    SetupInputCallbacks(window);
 
     // Indicamos que as chamadas OpenGL deverão renderizar nesta janela
     glfwMakeContextCurrent(window);
@@ -102,9 +95,11 @@ int main(int argc, char const *argv[])
     // biblioteca GLAD.
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
-    setupFramebufferSize(window);
+    SetupFramebufferSize(window);
 
-    printGlInfo();
+    PrintGlInfo();
+
+    CorrectCursorPos(window);
 
     // Carregamos os shaders de vértices e de fragmentos que serão utilizados
     // para renderização. Veja slides 176-196 do documento Aula_03_Rendering_Pipeline_Grafico.pdf.
@@ -186,7 +181,7 @@ int main(int argc, char const *argv[])
         for(size_t x = 0;x<WORLD_SIZE_X;x++){
             for(size_t y = 0;y<WORLD_SIZE_Y;y++){
                 for(size_t z = 0;z<WORLD_SIZE_Z;z++){
-                    if(worldBlockMatrix[WorldPoint(x,y,z)] == BLOCK_STONE){
+                    if(g_WorldBlockMatrix[WorldPoint(x,y,z)] == BLOCK_STONE){
                     model = Matrix_Translate(x,y,z);
                     glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
                     virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
@@ -244,23 +239,18 @@ void ErrorCallback(int error, const char* description)
 // Função callback chamada sempre que o usuário aperta algum dos botões do mouse
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        g_LeftMouseButtonPressed = true;
-    }
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
         CollisionFace output;
 
-            if(FacingNonAirBlock(output,g_Camera,worldBlockMatrix)){
+        if(FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)){
             glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
             PrintVector(point);
             std::cout<<output.axis<<std::endl;
             std::cout<<output.sign<<std::endl;
-            worldBlockMatrix[WorldPoint(output.block_position)] = BLOCK_AIR;
-
-            }
-        g_LeftMouseButtonPressed = false;
+            g_WorldBlockMatrix[WorldPoint(output.block_position)] = BLOCK_AIR;
+        }
 
     }
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
@@ -268,14 +258,13 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         // variável abaixo para false.
         CollisionFace output;
 
-            if(FacingNonAirBlock(output,g_Camera,worldBlockMatrix)){
+        if(FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)){
             glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
             PrintVector(point);
             glm::vec3 position = output.block_position;
             position[output.axis] -= output.sign;
-            worldBlockMatrix[WorldPoint(position)] = BLOCK_STONE;
-
-            }
+            g_WorldBlockMatrix[WorldPoint(position)] = BLOCK_STONE;
+        }
 
     }
 }
@@ -284,18 +273,35 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 // cima da janela OpenGL.
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
+    int window_center_x;
+    int window_center_y;
+
+    CorrectCursorPos(window, &window_center_x, &window_center_y);
+
     // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-    float dx = xpos - g_LastCursorPosX;
-    float dy = ypos - g_LastCursorPosY;
+    float dx = xpos - window_center_x;
+    float dy = ypos - window_center_y;
 
     g_Camera.RotateViewTheta(dx);
     g_Camera.RotateViewPhi(dy);
-    glfwSetCursorPos(window,400,300);
+}
 
-    // Atualizamos as variáveis globais para armazenar a posição atual do
-    // cursor como sendo a última posição conhecida do cursor.
-    g_LastCursorPosX = 400;
-    g_LastCursorPosY = 300;
+void CorrectCursorPos(GLFWwindow *window, int *out_window_center_x, int *out_window_center_y)
+{
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+
+    int window_center_x = window_width / 2;
+    int window_center_y = window_height / 2;
+
+    glfwSetCursorPos(window, window_center_x, window_center_y);
+
+    if (out_window_center_x != NULL) {
+        *out_window_center_x = window_center_x;
+    }
+    if (out_window_center_y != NULL) {
+        *out_window_center_y = window_center_y;
+    }
 }
 
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
@@ -476,7 +482,7 @@ void LoadShader(const char* filename, GLuint shader_id)
     delete [] log;
 }
 
-GLFWwindow *createWindow(void)
+GLFWwindow *CreateWindow(void)
 {
         // Pedimos para utilizar OpenGL versão 3.3 (ou superior)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -489,14 +495,17 @@ GLFWwindow *createWindow(void)
     // Pedimos para utilizar o perfil "core", isto é, utilizaremos somente as
     // funções modernas de OpenGL.
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - 313985 e 314256 - Bruno C Zimmermann e João G Zandoná", NULL, NULL);
+    int window_width = 800;
+    int window_height = 600;
+    window = glfwCreateWindow(window_width, window_height, "INF01047 - 313985 e 314256 - Bruno C Zimmermann e João G Zandoná", NULL, NULL);
     return window;
 }
 
-void setupInputCallbacks(GLFWwindow *window)
+void SetupInputCallbacks(GLFWwindow *window)
 {
     // Definimos a função de callback que será chamada sempre que o usuário
     // pressionar alguma tecla do teclado ...
@@ -509,7 +518,7 @@ void setupInputCallbacks(GLFWwindow *window)
     glfwSetScrollCallback(window, ScrollCallback);
 }
 
-void printGlInfo()
+void PrintGlInfo()
 {
     // Imprimimos no terminal informações sobre a GPU do sistema
     const GLubyte *vendor      = glGetString(GL_VENDOR);
@@ -528,7 +537,7 @@ void printGlInfo()
                 << std::endl;
 }
 
-void setupFramebufferSize(GLFWwindow *window)
+void SetupFramebufferSize(GLFWwindow *window)
 {
     // Definimos a função de callback que será chamada sempre que a janela for
     // redimensionada, por consequência alterando o tamanho do "framebuffer"

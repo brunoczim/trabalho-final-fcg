@@ -6,7 +6,7 @@
 float pi = acos(-1.0f);
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
-    center_point(2.0f, WORLD_SIZE_Y / 2.0f + 2.0f, 2.0f, 1.0f),
+    center_point(4.0f, WORLD_SIZE_Y / 2.0f + 2.0f, 4.0f, 1.0f),
     view_theta(0.0f),
     view_phi(0.0f),
     view_rho(2.5f),
@@ -71,7 +71,18 @@ void Camera::Zoom(float factor)
     // Atualizamos a distância da câmera para a origem utilizando a
     // movimentação da "rodinha", simulando um ZOOM.
     this->view_rho -= this->zoom_speed * factor;
-    this->field_of_view * factor;
+    this->field_of_view -= this->zoom_speed * factor;
+
+    float field_of_view_max = pi / 2;
+    float field_of_view_min = pi / 8;
+
+    if (this->field_of_view < field_of_view_min) {
+        this->field_of_view = field_of_view_min;
+    }
+
+    if (this->field_of_view > field_of_view_max) {
+        this->field_of_view = field_of_view_max;
+    }
 
     // Uma câmera look-at nunca pode estar exatamente "em cima" do ponto para
     // onde ela está olhando, pois isto gera problemas de divisão por zero na
@@ -128,7 +139,7 @@ glm::mat4 Camera::ViewMatrix() const
 
 glm::mat4 Camera::ProjectionMatrix() const
 {
-    float t = 1.5f*this->screen_ratio/2.5f;
+    float t = 1.5f*this->view_rho/2.5f;
     float b = -t;
     float r = t*this->screen_ratio;
     float l = -r;
