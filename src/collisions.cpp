@@ -52,7 +52,7 @@ bool FacingNonAirBlock(CollisionFace &output, Camera const &camera, WorldBlockMa
     if (block_selected) {
         output.block_position = target_point;
         output.axis = min_axis;
-        output.sign = (int) -(distances[min_axis] / abs(distances[min_axis]));
+        output.sign = view_vector[min_axis]/fabs(view_vector[min_axis]);
     }
     return block_selected;
 }

@@ -253,12 +253,29 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         CollisionFace output;
 
             if(FacingNonAirBlock(output,g_Camera,worldBlockMatrix)){
-            glm::vec4 point(output.block_position.x,output.block_position.y,output.block_position.z,0.0f);
+            glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
             PrintVector(point);
+            std::cout<<output.axis<<std::endl;
+            std::cout<<output.sign<<std::endl;
             worldBlockMatrix[WorldPoint(output.block_position)] = BLOCK_AIR;
 
             }
         g_LeftMouseButtonPressed = false;
+
+    }
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+        // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
+        // variável abaixo para false.
+        CollisionFace output;
+
+            if(FacingNonAirBlock(output,g_Camera,worldBlockMatrix)){
+            glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
+            PrintVector(point);
+            glm::vec3 position = output.block_position;
+            position[output.axis] -= output.sign;
+            worldBlockMatrix[WorldPoint(position)] = BLOCK_STONE;
+
+            }
 
     }
 }
