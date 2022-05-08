@@ -25,7 +25,7 @@
 
 #define OBJ_BLOCK 0
 
-#define TEXTURE_STONE 0
+#define INVENTORY_MAX 64
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void ErrorCallback(int error, const char* description);
@@ -47,6 +47,8 @@ void TextRendering_PrintMatrixVectorProductMoreDigits(GLFWwindow* window, glm::m
 void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
 
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
+void TextRendering_ShowCameraPosition(GLFWwindow* window);
+void TextRendering_ShowInventory(GLFWwindow* window);
 
 void LoadShader(const char* filename, GLuint shader_id);
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -67,6 +69,7 @@ Camera g_Camera;
 MatrixStack g_MatrixStack;
 WorldBlockMatrix g_WorldBlockMatrix;
 
+unsigned char g_StonesInInventory = 0;
 
 int main(int argc, char const *argv[])
 {
@@ -215,9 +218,9 @@ int main(int argc, char const *argv[])
         }
         */
 
-
-
         TextRendering_ShowFramesPerSecond(window);
+        TextRendering_ShowCameraPosition(window);
+        TextRendering_ShowInventory(window);
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -254,26 +257,30 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         // variável abaixo para false.
         CollisionFace output;
 
-        if(FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)){
+        if (FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)) {
             glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
             PrintVector(point);
             std::cout<<output.axis<<std::endl;
             std::cout<<output.sign<<std::endl;
             g_WorldBlockMatrix[WorldPoint(output.block_position)] = BLOCK_AIR;
+            if (g_StonesInInventory < INVENTORY_MAX) {
+                g_StonesInInventory++;
+            }
         }
-
     }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && g_StonesInInventory > 0) {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
         CollisionFace output;
 
-        if(FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)){
+        if (FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)) {
             glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
             PrintVector(point);
             glm::vec3 position = output.block_position;
             position[output.axis] -= output.sign;
             g_WorldBlockMatrix[WorldPoint(position)] = BLOCK_STONE;
+            g_StonesInInventory--;
         }
 
     }
@@ -617,7 +624,7 @@ GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id)
 // second).
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
 {
-    if ( !g_ShowInfoText )
+    if (!g_ShowInfoText)
         return;
 
     // Variáveis estáticas (static) mantém seus valores entre chamadas
@@ -649,3 +656,41 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0f-lineheight, 1.0f);
 }
 
+void TextRendering_ShowCameraPosition(GLFWwindow* window)
+{
+     if (!g_ShowInfoText)
+        return;
+
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    char buffer[17*3] = {0};
+
+    size_t numchars = snprintf(
+             buffer,
+             17*3,
+             "X=%.2f  Y=%.2f  Z=%.2f",
+             g_Camera.CenterPoint().x,
+             g_Camera.CenterPoint().y,
+             g_Camera.CenterPoint().z
+    );
+
+    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0 - lineheight * 1.25 * 2, 1.0f);
+}
+
+void TextRendering_ShowInventory(GLFWwindow* window)
+{
+    if (!g_ShowInfoText)
+        return;
+
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    char buffer[20] = "INVENTORY";
+    size_t numchars = strlen(buffer);
+
+    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0 - lineheight * 1.25 * 4, 1.0f);
+
+    numchars = snprintf(buffer, 20, "STONES: %u", g_StonesInInventory);
+    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0 - lineheight * 1.25 * 5, 1.0f);
+}
