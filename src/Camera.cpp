@@ -6,7 +6,7 @@
 float pi = acos(-1.0f);
 Camera::Camera():
     projection_type(PERSPECTIVE_PROJ),
-    center_point(2.0f, WORLD_SIZE_Y / 2.0f + 1.5f, 2.0f, 1.0f),
+    center_point(2.0f, WORLD_SIZE_Y / 2.0f + 2.0f, 2.0f, 1.0f),
     view_theta(0.0f),
     view_phi(0.0f),
     view_rho(2.5f),

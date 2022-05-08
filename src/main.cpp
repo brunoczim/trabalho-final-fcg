@@ -21,6 +21,8 @@
 #include "scene.hpp"
 #include "stb_image.h"
 #include "blocks.hpp"
+#include "collisions.hpp"
+
 
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -69,6 +71,7 @@ double g_LastCursorPosX, g_LastCursorPosY;
 Camera g_Camera;
 MatrixStack matrixStack;
 WorldBlockMatrix worldBlockMatrix;
+
 
 int main(int argc, char const *argv[])
 {
@@ -247,7 +250,16 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
+        CollisionFace output;
+
+            if(FacingNonAirBlock(output,g_Camera,worldBlockMatrix)){
+            glm::vec4 point(output.block_position.x,output.block_position.y,output.block_position.z,0.0f);
+            PrintVector(point);
+            worldBlockMatrix[WorldPoint(output.block_position)] = BLOCK_AIR;
+
+            }
         g_LeftMouseButtonPressed = false;
+
     }
 }
 
@@ -261,11 +273,12 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 
     g_Camera.RotateViewTheta(dx);
     g_Camera.RotateViewPhi(dy);
+    glfwSetCursorPos(window,400,300);
 
     // Atualizamos as variáveis globais para armazenar a posição atual do
     // cursor como sendo a última posição conhecida do cursor.
-    g_LastCursorPosX = xpos;
-    g_LastCursorPosY = ypos;
+    g_LastCursorPosX = 400;
+    g_LastCursorPosY = 300;
 }
 
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
@@ -313,7 +326,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     float delta = 3.141592 / 16; // 22.5 graus, em radianos.
 
-    // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
+    //Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
     if (key == GLFW_KEY_P && action == GLFW_PRESS) {
         g_Camera.SetProjectionType(Camera::PERSPECTIVE_PROJ);
     }
