@@ -137,6 +137,7 @@ int main(int argc, char const *argv[])
     GLuint program_id = CreateGpuProgram(vertex_shader_id, fragment_shader_id);
 
     GLuint stone_texture_id = LoadTextureImage("../../data/stone.png", "stone_texture_image", program_id);
+    GLuint cow_texture_id = LoadTextureImage("../../data/cow_texture.jpg", "cow_texture_image", program_id);
 
     // Buscamos o endereço das variáveis definidas dentro do Vertex Shader.
     // Utilizaremos estas variáveis para enviar dados para a placa de vídeo
@@ -201,6 +202,7 @@ int main(int argc, char const *argv[])
         }
         //Desenhar vaca
         glUniform1i(object_id_uniform, OBJ_COW);
+        glUniform1i(selected_texture_uniform, cow_texture_id);
         model = Matrix_Translate(0,17,0);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
         virtual_scene["cow"].Draw(bbox_min_uniform, bbox_max_uniform);
