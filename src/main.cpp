@@ -63,6 +63,8 @@ void CorrectCursorPos(GLFWwindow *window, int *out_window_center_x = NULL, int *
 
 GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id);
 
+glm::vec3 CowPosition(double time);
+
 // Variável que controla se o texto informativo será mostrado na tela.
 bool g_ShowInfoText = true;
 
@@ -157,6 +159,7 @@ int main(int argc, char const *argv[])
 
     TextRendering_Init();
 
+    double cow_time_start = glfwGetTime();
 
     while (!glfwWindowShouldClose(window)) {
         // Aqui executamos as operações de renderização
@@ -199,9 +202,16 @@ int main(int argc, char const *argv[])
                 }
             }
         }
+
+        double cow_time_curr = glfwGetTime();
+        double cow_speed = 0.1f;
+
+        glm::vec3 cow_xz = CowPosition((cow_time_curr - cow_time_start) * cow_speed);
+        glm::vec4 cow_pos = glm::vec4(cow_xz.x, WORLD_SIZE_Y/2.0f + 0.5f, cow_xz.y, 1.0f);
+
         //Desenhar vaca
         glUniform1i(object_id_uniform, OBJ_COW);
-        model = Matrix_Translate(0,17,0);
+        model = Matrix_Translate(cow_pos.x, cow_pos.y, cow_pos.z);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
         virtual_scene["cow"].Draw(bbox_min_uniform, bbox_max_uniform);
 
@@ -684,4 +694,25 @@ void TextRendering_ShowInventory(GLFWwindow* window)
 
     numchars = snprintf(buffer, 20, "STONES: %u", g_StonesInInventory);
     TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0 - lineheight * 1.25 * 5, 1.0f);
+}
+
+glm::vec3 CowPosition(double time)
+{
+    float t = fabs(time - floor(time));
+
+    glm::vec3 pos_1 = glm::vec3(6.0f, 6.0f, 1.0f);
+    glm::vec3 pos_2 = glm::vec3(9.0f, 20.0f, 1.0f);
+    glm::vec3 pos_3 = glm::vec3(12.0f, 7.0f, 1.0f);
+    glm::vec3 pos_4 = glm::vec3(14.0f, 19.0f, 1.0f);
+    glm::vec3 pos_5 = glm::vec3(6.0f, 6.0f, 1.0f);
+
+    glm::vec3 c12 = pos_1 + t * (pos_2 - pos_1);
+    glm::vec3 c23 = pos_2 + t * (pos_3 - pos_2);
+    glm::vec3 c13 = c12 + t * (c23 - c12);
+
+    glm::vec3 c34 = pos_3 + t * (pos_4 - pos_3);
+    glm::vec3 c45 = pos_4 + t * (pos_5 - pos_4);
+    glm::vec3 c35 = c34 + t * (c45 - c34);
+
+    return c13 + t * (c35 - c13);
 }
