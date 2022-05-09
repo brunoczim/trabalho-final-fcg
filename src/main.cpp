@@ -5,9 +5,8 @@
 #include <sstream>
 #include <map>
 
-#include <glad/glad.h>   // Criação de contexto OpenGL 3.3
-#include <GLFW/glfw3.h>  // Criação de janelas do sistema operacional
-
+#include <glad/glad.h>  // Criação de contexto OpenGL 3.3
+#include <GLFW/glfw3.h> // Criação de janelas do sistema operacional
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
@@ -29,32 +28,32 @@
 
 #define INVENTORY_MAX 64
 
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
-void ErrorCallback(int error, const char* description);
-void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
-void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
-void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+void FramebufferSizeCallback(GLFWwindow *window, int width, int height);
+void ErrorCallback(int error, const char *description);
+void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
+void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
+void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
 void TextRendering_Init();
-float TextRendering_LineHeight(GLFWwindow* window);
-float TextRendering_CharWidth(GLFWwindow* window);
-void TextRendering_PrintString(GLFWwindow* window, const std::string &str, float x, float y, float scale = 1.0f);
-void TextRendering_PrintMatrix(GLFWwindow* window, glm::mat4 M, float x, float y, float scale = 1.0f);
-void TextRendering_PrintVector(GLFWwindow* window, glm::vec4 v, float x, float y, float scale = 1.0f);
-void TextRendering_PrintMatrixVectorProduct(GLFWwindow* window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
-void TextRendering_PrintMatrixVectorProductMoreDigits(GLFWwindow* window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
-void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
+float TextRendering_LineHeight(GLFWwindow *window);
+float TextRendering_CharWidth(GLFWwindow *window);
+void TextRendering_PrintString(GLFWwindow *window, const std::string &str, float x, float y, float scale = 1.0f);
+void TextRendering_PrintMatrix(GLFWwindow *window, glm::mat4 M, float x, float y, float scale = 1.0f);
+void TextRendering_PrintVector(GLFWwindow *window, glm::vec4 v, float x, float y, float scale = 1.0f);
+void TextRendering_PrintMatrixVectorProduct(GLFWwindow *window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
+void TextRendering_PrintMatrixVectorProductMoreDigits(GLFWwindow *window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
+void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow *window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
 
-void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
-void TextRendering_ShowCameraPosition(GLFWwindow* window);
-void TextRendering_ShowInventory(GLFWwindow* window);
+void TextRendering_ShowFramesPerSecond(GLFWwindow *window);
+void TextRendering_ShowCameraPosition(GLFWwindow *window);
+void TextRendering_ShowInventory(GLFWwindow *window);
 
-void LoadShader(const char* filename, GLuint shader_id);
-GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
-GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
+void LoadShader(const char *filename, GLuint shader_id);
+GLuint LoadShader_Vertex(const char *filename);   // Carrega um vertex shader
+GLuint LoadShader_Fragment(const char *filename); // Carrega um fragment shader
 GLFWwindow *CreateGLFWWindow(void);
 void SetupInputCallbacks(GLFWwindow *window);
 void PrintGlInfo();
@@ -63,6 +62,8 @@ void SetupFramebufferSize(GLFWwindow *window);
 void CorrectCursorPos(GLFWwindow *window, int *out_window_center_x = NULL, int *out_window_center_y = NULL);
 
 GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id);
+
+glm::vec3 CowPosition(double time);
 
 // Variável que controla se o texto informativo será mostrado na tela.
 bool g_ShowInfoText = true;
@@ -100,7 +101,7 @@ int main(int argc, char const *argv[])
 
     // Carregamento de todas funções definidas por OpenGL 3.3, utilizando a
     // biblioteca GLAD.
-    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
     SetupFramebufferSize(window);
 
@@ -144,14 +145,13 @@ int main(int argc, char const *argv[])
     // Buscamos o endereço das variáveis definidas dentro do Vertex Shader.
     // Utilizaremos estas variáveis para enviar dados para a placa de vídeo
     // (GPU)! Veja arquivo "shader_vertex.glsl".
-    GLint model_uniform             = glGetUniformLocation(program_id, "model"); // Variável da matriz "model"
-    GLint view_uniform              = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
-    GLint projection_uniform        = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
-    GLint object_id_uniform         = glGetUniformLocation(program_id, "object_id");
-    GLint selected_texture_uniform  = glGetUniformLocation(program_id, "selected_texture");
-    GLint bbox_min_uniform          = glGetUniformLocation(program_id, "bbox_min");
-    GLint bbox_max_uniform          = glGetUniformLocation(program_id, "bbox_max");
-
+    GLint model_uniform = glGetUniformLocation(program_id, "model");           // Variável da matriz "model"
+    GLint view_uniform = glGetUniformLocation(program_id, "view");             // Variável da matriz "view" em shader_vertex.glsl
+    GLint projection_uniform = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
+    GLint object_id_uniform = glGetUniformLocation(program_id, "object_id");
+    GLint selected_texture_uniform = glGetUniformLocation(program_id, "selected_texture");
+    GLint bbox_min_uniform = glGetUniformLocation(program_id, "bbox_min");
+    GLint bbox_max_uniform = glGetUniformLocation(program_id, "bbox_max");
 
     // Habilitamos o Z-buffer. Veja slides 104-116 do documento Aula_09_Projecoes.pdf.2
     glEnable(GL_DEPTH_TEST);
@@ -160,8 +160,10 @@ int main(int argc, char const *argv[])
 
     TextRendering_Init();
 
+    double cow_time_start = glfwGetTime();
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window))
+    {
         // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -184,29 +186,42 @@ int main(int argc, char const *argv[])
         glm::mat4 view = g_Camera.ViewMatrix();
         glm::mat4 projection = g_Camera.ProjectionMatrix();
 
-        glUniformMatrix4fv(view_uniform, 1, GL_FALSE , glm::value_ptr(view));
-        glUniformMatrix4fv(projection_uniform, 1, GL_FALSE , glm::value_ptr(projection));
+        glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
 
-        //Renderiza os blocos do chao
+        // Renderiza os blocos do chao
         glUniform1i(object_id_uniform, OBJ_BLOCK);
 
-        for (size_t x = 0; x < WORLD_SIZE_X; x++) {
-            for (size_t y = 0; y < WORLD_SIZE_Y; y++) {
-                for (size_t z = 0; z < WORLD_SIZE_Z; z++) {
-                    if (g_WorldBlockMatrix[WorldPoint(x,y,z)] == BLOCK_STONE) {
+        for (size_t x = 0; x < WORLD_SIZE_X; x++)
+        {
+            for (size_t y = 0; y < WORLD_SIZE_Y; y++)
+            {
+                for (size_t z = 0; z < WORLD_SIZE_Z; z++)
+                {
+                    if (g_WorldBlockMatrix[WorldPoint(x, y, z)] == BLOCK_STONE)
+                    {
                         glUniform1i(selected_texture_uniform, stone_texture_id);
-                        model = Matrix_Translate(x,y,z);
-                        glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
+                        model = Matrix_Translate(x, y, z);
+                        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                         virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
                     }
                 }
             }
         }
-        //Desenhar vaca
+
+        double cow_time_curr = glfwGetTime();
+        double cow_speed = 0.1f;
+
+        glm::vec3 cow_xz = CowPosition((cow_time_curr - cow_time_start) * cow_speed);
+        glm::vec4 cow_pos = glm::vec4(cow_xz.x, WORLD_SIZE_Y / 2.0f + 0.5f, cow_xz.y, 1.0f);
+
+        // Desenhar vaca
         glUniform1i(object_id_uniform, OBJ_COW);
         glUniform1i(selected_texture_uniform, cow_texture_id);
-        model = Matrix_Translate(0,17,0);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
+
+        model = Matrix_Translate(cow_pos.x, cow_pos.y, cow_pos.z);
+
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         virtual_scene["cow"].Draw(bbox_min_uniform, bbox_max_uniform);
 
         /*
@@ -234,7 +249,6 @@ int main(int argc, char const *argv[])
         // definidas anteriormente usando glfwSet*Callback() serão chamadas
         // pela biblioteca GLFW.
         glfwPollEvents();
-
     }
 
     // Finalizamos o uso dos recursos do sistema operacional
@@ -243,51 +257,55 @@ int main(int argc, char const *argv[])
 }
 
 // Definimos o callback para impressão de erros da GLFW no terminal
-void ErrorCallback(int error, const char* description)
+void ErrorCallback(int error, const char *description)
 {
     std::cerr << "ERROR: GLFW (" << error << "): " << description << std::endl;
 }
 
 // Função callback chamada sempre que o usuário aperta algum dos botões do mouse
-void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
         CollisionFace output;
 
-        if (FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)) {
-            glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
+        if (FacingNonAirBlock(output, g_Camera, g_WorldBlockMatrix))
+        {
+            glm::vec4 point(round(output.block_position.x), round(output.block_position.y), round(output.block_position.z), 0.0f);
             PrintVector(point);
-            std::cout<<output.axis<<std::endl;
-            std::cout<<output.sign<<std::endl;
+            std::cout << output.axis << std::endl;
+            std::cout << output.sign << std::endl;
             g_WorldBlockMatrix[WorldPoint(output.block_position)] = BLOCK_AIR;
-            if (g_StonesInInventory < INVENTORY_MAX) {
+            if (g_StonesInInventory < INVENTORY_MAX)
+            {
                 g_StonesInInventory++;
             }
         }
     }
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
         CollisionFace output;
 
-        if (FacingNonAirBlock(output,g_Camera,g_WorldBlockMatrix)) {
-            glm::vec4 point(round(output.block_position.x),round(output.block_position.y),round(output.block_position.z),0.0f);
+        if (FacingNonAirBlock(output, g_Camera, g_WorldBlockMatrix))
+        {
+            glm::vec4 point(round(output.block_position.x), round(output.block_position.y), round(output.block_position.z), 0.0f);
             PrintVector(point);
             glm::vec3 position = output.block_position;
             position[output.axis] -= output.sign;
             g_WorldBlockMatrix[WorldPoint(position)] = BLOCK_STONE;
             g_StonesInInventory--;
         }
-
     }
 }
 
 // Função callback chamada sempre que o usuário movimentar o cursor do mouse em
 // cima da janela OpenGL.
-void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+void CursorPosCallback(GLFWwindow *window, double xpos, double ypos)
 {
     int window_center_x;
     int window_center_y;
@@ -312,25 +330,27 @@ void CorrectCursorPos(GLFWwindow *window, int *out_window_center_x, int *out_win
 
     glfwSetCursorPos(window, window_center_x, window_center_y);
 
-    if (out_window_center_x != NULL) {
+    if (out_window_center_x != NULL)
+    {
         *out_window_center_x = window_center_x;
     }
-    if (out_window_center_y != NULL) {
+    if (out_window_center_y != NULL)
+    {
         *out_window_center_y = window_center_y;
     }
 }
 
 // Função callback chamada sempre que o usuário movimenta a "rodinha" do mouse.
-void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
 {
     g_Camera.Zoom(yoffset);
 }
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
 // tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
-void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
+void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mod)
 {
-        // ===============
+    // ===============
     // Não modifique este loop! Ele é utilizando para correção automatizada dos
     // laboratórios. Deve ser sempre o primeiro comando desta função KeyCallback().
     for (int i = 0; i < 10; ++i)
@@ -351,34 +371,49 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     //   Se apertar tecla shift+Z então g_AngleZ -= delta;
 
     /******* Movimento da Câmera Para Frente/Trás/Lados *******/
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (key == GLFW_KEY_W) {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+    {
+        if (key == GLFW_KEY_W)
+        {
             g_Camera.MoveForewards();
-        } else if (key == GLFW_KEY_S) {
+        }
+        else if (key == GLFW_KEY_S)
+        {
             g_Camera.MoveBackwards();
-        } else if (key == GLFW_KEY_A) {
+        }
+        else if (key == GLFW_KEY_A)
+        {
             g_Camera.MoveLeftwards();
-        } else if (key == GLFW_KEY_D) {
+        }
+        else if (key == GLFW_KEY_D)
+        {
             g_Camera.MoveRightwards();
-        }else if (key == GLFW_KEY_SPACE) {
+        }
+        else if (key == GLFW_KEY_SPACE)
+        {
             g_Camera.MoveUpwards();
-        }else if (key == GLFW_KEY_F) {
+        }
+        else if (key == GLFW_KEY_F)
+        {
             g_Camera.MoveDownwards();
         }
     }
 
-    //Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
-    if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+    // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+    {
         g_Camera.SetProjectionType(Camera::PERSPECTIVE_PROJ);
     }
 
     // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-    if (key == GLFW_KEY_O && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_O && action == GLFW_PRESS)
+    {
         g_Camera.SetProjectionType(Camera::ORTHOGRAPHIC_PROJ);
     }
 
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-    if (key == GLFW_KEY_H && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_H && action == GLFW_PRESS)
+    {
         g_ShowInfoText = !g_ShowInfoText;
     }
 }
@@ -386,7 +421,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 // Definição da função que será chamada sempre que a janela do sistema
 // operacional for redimensionada, por consequência alterando o tamanho do
 // "framebuffer" (região de memória onde são armazenados os pixels da imagem).
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
     // Indicamos que queremos renderizar em toda região do framebuffer. A
     // função "glViewport" define o mapeamento das "normalized device
@@ -405,7 +440,7 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 }
 
 // Carrega um Vertex Shader de um arquivo. Veja definição de LoadShader() abaixo.
-GLuint LoadShader_Vertex(const char* filename)
+GLuint LoadShader_Vertex(const char *filename)
 {
     // Criamos um identificador (ID) para este shader, informando que o mesmo
     // será aplicado nos vértices.
@@ -419,7 +454,7 @@ GLuint LoadShader_Vertex(const char* filename)
 }
 
 // Carrega um Fragment Shader de um arquivo. Veja definição de LoadShader() abaixo.
-GLuint LoadShader_Fragment(const char* filename)
+GLuint LoadShader_Fragment(const char *filename)
 {
     // Criamos um identificador (ID) para este shader, informando que o mesmo
     // será aplicado nos fragmentos.
@@ -434,24 +469,27 @@ GLuint LoadShader_Fragment(const char* filename)
 
 // Função auxilar, utilizada pelas duas funções acima. Carrega código de GPU de
 // um arquivo GLSL e faz sua compilação.
-void LoadShader(const char* filename, GLuint shader_id)
+void LoadShader(const char *filename, GLuint shader_id)
 {
     // Lemos o arquivo de texto indicado pela variável "filename"
     // e colocamos seu conteúdo em memória, apontado pela variável
     // "shader_string".
     std::ifstream file;
-    try {
+    try
+    {
         file.exceptions(std::ifstream::failbit);
         file.open(filename);
-    } catch ( std::exception& e ) {
+    }
+    catch (std::exception &e)
+    {
         fprintf(stderr, "ERROR: Cannot open file \"%s\".\n", filename);
         std::exit(EXIT_FAILURE);
     }
     std::stringstream shader;
     shader << file.rdbuf();
     std::string str = shader.str();
-    const GLchar* shader_string = str.c_str();
-    const GLint   shader_string_length = static_cast<GLint>( str.length() );
+    const GLchar *shader_string = str.c_str();
+    const GLint shader_string_length = static_cast<GLint>(str.length());
 
     // Define o código do shader GLSL, contido na string "shader_string"
     glShaderSource(shader_id, 1, &shader_string, &shader_string_length);
@@ -468,14 +506,16 @@ void LoadShader(const char* filename, GLuint shader_id)
 
     // Alocamos memória para guardar o log de compilação.
     // A chamada "new" em C++ é equivalente ao "malloc()" do C.
-    GLchar* log = new GLchar[log_length];
+    GLchar *log = new GLchar[log_length];
     glGetShaderInfoLog(shader_id, log_length, &log_length, log);
 
     // Imprime no terminal qualquer erro ou "warning" de compilação
-    if (log_length != 0) {
-        std::string  output;
+    if (log_length != 0)
+    {
+        std::string output;
 
-        if (!compiled_ok) {
+        if (!compiled_ok)
+        {
             output += "ERROR: OpenGL compilation of \"";
             output += filename;
             output += "\" failed.\n";
@@ -497,18 +537,18 @@ void LoadShader(const char* filename, GLuint shader_id)
     }
 
     // A chamada "delete" em C++ é equivalente ao "free()" do C
-    delete [] log;
+    delete[] log;
 }
 
 GLFWwindow *CreateGLFWWindow(void)
 {
-        // Pedimos para utilizar OpenGL versão 3.3 (ou superior)
+    // Pedimos para utilizar OpenGL versão 3.3 (ou superior)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-    #ifdef __APPLE__
+#ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #endif
+#endif
 
     // Pedimos para utilizar o perfil "core", isto é, utilizaremos somente as
     // funções modernas de OpenGL.
@@ -516,7 +556,7 @@ GLFWwindow *CreateGLFWWindow(void)
 
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
-    GLFWwindow* window;
+    GLFWwindow *window;
     int window_width = 800;
     int window_height = 600;
     window = glfwCreateWindow(window_width, window_height, "INF01047 - 313985 e 314256 - Bruno C Zimmermann e João G Zandoná", NULL, NULL);
@@ -539,20 +579,20 @@ void SetupInputCallbacks(GLFWwindow *window)
 void PrintGlInfo()
 {
     // Imprimimos no terminal informações sobre a GPU do sistema
-    const GLubyte *vendor      = glGetString(GL_VENDOR);
-    const GLubyte *renderer    = glGetString(GL_RENDERER);
-    const GLubyte *glversion   = glGetString(GL_VERSION);
+    const GLubyte *vendor = glGetString(GL_VENDOR);
+    const GLubyte *renderer = glGetString(GL_RENDERER);
+    const GLubyte *glversion = glGetString(GL_VERSION);
     const GLubyte *glslversion = glGetString(GL_SHADING_LANGUAGE_VERSION);
 
-    std::cout   << "GPU: "
-                << vendor
-                << ", "
-                << renderer
-                << ", OpenGL: "
-                << glversion
-                << ", GLSL: "
-                << glslversion
-                << std::endl;
+    std::cout << "GPU: "
+              << vendor
+              << ", "
+              << renderer
+              << ", OpenGL: "
+              << glversion
+              << ", GLSL: "
+              << glslversion
+              << std::endl;
 }
 
 void SetupFramebufferSize(GLFWwindow *window)
@@ -578,7 +618,8 @@ GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id)
     int channels;
     unsigned char *data = stbi_load(path, &width, &height, &channels, 3);
 
-    if (data == NULL) {
+    if (data == NULL)
+    {
         std::cerr << "ERROR: Cannot open image file \"" << path << "\"." << std::endl;
         std::exit(EXIT_FAILURE);
     }
@@ -625,7 +666,7 @@ GLuint LoadTextureImage(char const *path, char const *name, GLuint program_id)
 
 // Escrevemos na tela o número de quadros renderizados por segundo (frames per
 // second).
-void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
+void TextRendering_ShowFramesPerSecond(GLFWwindow *window)
 {
     if (!g_ShowInfoText)
         return;
@@ -633,9 +674,9 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     // Variáveis estáticas (static) mantém seus valores entre chamadas
     // subsequentes da função!
     static float old_seconds = (float)glfwGetTime();
-    static int   ellapsed_frames = 0;
-    static char  buffer[20] = "?? fps";
-    static int   numchars = 7;
+    static int ellapsed_frames = 0;
+    static char buffer[20] = "?? fps";
+    static int numchars = 7;
 
     ellapsed_frames += 1;
 
@@ -645,7 +686,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     // Número de segundos desde o último cálculo do fps
     float ellapsed_seconds = seconds - old_seconds;
 
-    if ( ellapsed_seconds > 1.0f )
+    if (ellapsed_seconds > 1.0f)
     {
         numchars = snprintf(buffer, 20, "%.2f fps", ellapsed_frames / ellapsed_seconds);
 
@@ -656,32 +697,31 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     float lineheight = TextRendering_LineHeight(window);
     float charwidth = TextRendering_CharWidth(window);
 
-    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0f-lineheight, 1.0f);
+    TextRendering_PrintString(window, buffer, 1.0f - (numchars + 1) * charwidth, 1.0f - lineheight, 1.0f);
 }
 
-void TextRendering_ShowCameraPosition(GLFWwindow* window)
+void TextRendering_ShowCameraPosition(GLFWwindow *window)
 {
-     if (!g_ShowInfoText)
+    if (!g_ShowInfoText)
         return;
 
     float lineheight = TextRendering_LineHeight(window);
     float charwidth = TextRendering_CharWidth(window);
 
-    char buffer[17*3] = {0};
+    char buffer[17 * 3] = {0};
 
     size_t numchars = snprintf(
-             buffer,
-             17*3,
-             "X=%.2f  Y=%.2f  Z=%.2f",
-             g_Camera.CenterPoint().x,
-             g_Camera.CenterPoint().y,
-             g_Camera.CenterPoint().z
-    );
+        buffer,
+        17 * 3,
+        "X=%.2f  Y=%.2f  Z=%.2f",
+        g_Camera.CenterPoint().x,
+        g_Camera.CenterPoint().y,
+        g_Camera.CenterPoint().z);
 
-    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0 - lineheight * 1.25 * 2, 1.0f);
+    TextRendering_PrintString(window, buffer, 1.0f - (numchars + 1) * charwidth, 1.0 - lineheight * 1.25 * 2, 1.0f);
 }
 
-void TextRendering_ShowInventory(GLFWwindow* window)
+void TextRendering_ShowInventory(GLFWwindow *window)
 {
     if (!g_ShowInfoText)
         return;
@@ -692,8 +732,29 @@ void TextRendering_ShowInventory(GLFWwindow* window)
     char buffer[20] = "INVENTORY";
     size_t numchars = strlen(buffer);
 
-    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0 - lineheight * 1.25 * 4, 1.0f);
+    TextRendering_PrintString(window, buffer, 1.0f - (numchars + 1) * charwidth, 1.0 - lineheight * 1.25 * 4, 1.0f);
 
     numchars = snprintf(buffer, 20, "STONES: %u", g_StonesInInventory);
-    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, 1.0 - lineheight * 1.25 * 5, 1.0f);
+    TextRendering_PrintString(window, buffer, 1.0f - (numchars + 1) * charwidth, 1.0 - lineheight * 1.25 * 5, 1.0f);
+}
+
+glm::vec3 CowPosition(double time)
+{
+    float t = fabs(time - floor(time));
+
+    glm::vec3 pos_1 = glm::vec3(6.0f, 6.0f, 1.0f);
+    glm::vec3 pos_2 = glm::vec3(9.0f, 20.0f, 1.0f);
+    glm::vec3 pos_3 = glm::vec3(12.0f, 7.0f, 1.0f);
+    glm::vec3 pos_4 = glm::vec3(14.0f, 19.0f, 1.0f);
+    glm::vec3 pos_5 = glm::vec3(6.0f, 6.0f, 1.0f);
+
+    glm::vec3 c12 = pos_1 + t * (pos_2 - pos_1);
+    glm::vec3 c23 = pos_2 + t * (pos_3 - pos_2);
+    glm::vec3 c13 = c12 + t * (c23 - c12);
+
+    glm::vec3 c34 = pos_3 + t * (pos_4 - pos_3);
+    glm::vec3 c45 = pos_4 + t * (pos_5 - pos_4);
+    glm::vec3 c35 = c34 + t * (c45 - c34);
+
+    return c13 + t * (c35 - c13);
 }
