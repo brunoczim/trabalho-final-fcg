@@ -20,6 +20,7 @@ uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
 #define OBJ_BLOCK 0
+#define OBJ_COW 1
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -35,6 +36,8 @@ out vec4 color;
 // Constantes
 #define M_PI   3.14159265358979323846
 #define M_PI_2 1.57079632679489661923
+float pi = 3.1415f;
+float abertura = pi/6.0f;
 
 void main()
 {
@@ -64,6 +67,17 @@ void main()
     float U = 0.0;
     float V = 0.0;
 
+    vec3 Kd;
+
+    vec4 sentidoLuz = normalize(vec4(0.0,1.0,0.0,0.0));
+    float beta = dot(p-l,sentidoLuz);
+    float alpha = cos(abertura);
+
+    vec3 Ka;
+    vec3 Ks;
+    float q;
+    vec4 r = -l+2*n*dot(l,n);
+
     if (object_id == OBJ_BLOCK) {
         // Coordenadas de textura do bloco, obtidas do arquivo OBJ.
         if (abs(position_model.x) == 0.5) {
@@ -82,15 +96,43 @@ void main()
 
         U = (floor(U * 16.0f) - 0.5) / 16.0f;
         V = (floor(V * 16.0f) - 0.5) / 16.0f;
+        Kd = texture(selected_texture, vec2(U,V)).rgb;
+        float lambert = max(0,dot(n,l));
+        color.rgb = Kd * (lambert + 0.01);
+
+
+
+    }
+    else if (object_id == OBJ_COW){
+        Kd = vec3(1.0,1.0,0.0);
+        Ks = vec3(0.8,0.8,0.8);
+        Ka = vec3(0.2,0.2,0.2);
+        q = 12;
+
+        vec3 I = vec3(1.0,1.0,1.0);
+        vec3 lambert_diffuse_term = I*Kd*max(0,dot(l,n));
+
+        vec3 Ia = vec3(0.0,0.0,0.0);
+        vec3 ambient_term = Ka*Ia;
+
+        vec3 phong_specular_term  = Ks*I*pow(max(0,dot(v,normalize(r))),q);
+
+
+        if(beta<alpha){
+            lambert_diffuse_term = vec3(0.0,0.0,0.0);
+            phong_specular_term = vec3(0.0,0.0,0.0);
+        }
+        color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
     }
 
-    // Obtemos a refletância difusa a partir da leitura da imagem selecionada
-    vec3 Kd = texture(selected_texture, vec2(U,V)).rgb;
 
-    // Equação de Iluminação
-    float lambert = max(0,dot(n,l));
 
-    color.rgb = Kd * (lambert + 0.01);
+
+
+
+
+//até aqui nao deu erro
+
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:

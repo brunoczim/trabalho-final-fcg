@@ -24,6 +24,7 @@
 #include "collisions.hpp"
 
 #define OBJ_BLOCK 0
+#define OBJ_COW 1
 
 #define INVENTORY_MAX 64
 
@@ -198,32 +199,11 @@ int main(int argc, char const *argv[])
                 }
             }
         }
-        if(colisaoCuboCubo(g_Camera.CenterPoint(),0.5,glm::vec3(0,17,0),0.5)){
-            PrintVector(g_Camera.CenterPoint());
-            std::cout<<"  Colidiu com :";
-            PrintVector(glm::vec4(0,17,0,1));
-            std::cout<<std::endl;
-        }
-
-        if(colisaoCuboPlanoOrdinais(g_Camera.CenterPoint(),0.5,1,18.0)){
-            PrintVector(g_Camera.CenterPoint());
-            std::cout<<"  Colidiu com :";
-            std::cout<<std::endl;
-        }
-
-       /*
-        for(int i = 0;i<256;i++){
-            for(int j = 0;j<256;j++){
-                for(int k = 0;k<256;k++){
-                    if(worldBlockMatrix.getPoint(i,j,k) == BLOCK_STONE){
-                    model = Matrix_Translate(i,j,k);
-                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
-                    virtual_scene["block"].Draw(bbox_min_uniform, bbox_max_uniform);
-                    }
-                }
-            }
-        }
-        */
+        //Desenhar vaca
+        glUniform1i(object_id_uniform, OBJ_COW);
+        model = Matrix_Translate(0,17,0);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE , glm::value_ptr(model));
+        virtual_scene["cow"].Draw(bbox_min_uniform, bbox_max_uniform);
 
         TextRendering_ShowFramesPerSecond(window);
         TextRendering_ShowCameraPosition(window);
@@ -276,7 +256,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         }
     }
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && g_StonesInInventory > 0) {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
         // Quando o usuário soltar o botão esquerdo do mouse, atualizamos a
         // variável abaixo para false.
         CollisionFace output;
