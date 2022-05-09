@@ -265,6 +265,7 @@ VirtualScene::VirtualScene()
 {
     ObjModel::NewIntoVirtualScene(*this, "../../data/block.obj");
     ObjModel::NewIntoVirtualScene(*this, "../../data/cow.obj");
+    ObjModel::NewIntoVirtualScene(*this, "../../data/eye.obj");
 }
 
 

@@ -21,6 +21,7 @@ uniform mat4 projection;
 // Identificador que define qual objeto está sendo desenhado no momento
 #define OBJ_BLOCK 0
 #define OBJ_COW 1
+#define OBJ_EYE 2
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -137,6 +138,43 @@ void main()
             phong_specular_term = vec3(0.0,0.0,0.0);
         }
         color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
+    }
+    else if (object_id == OBJ_EYE){
+        Kd = vec3(1.0,1.0,0.0);
+        Ks = vec3(0.8,0.8,0.8);
+        Ka = vec3(0.2,0.2,0.2);
+        q = 12;
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+
+        vec4 pvector = position_model-bbox_center;
+
+        float px = pvector.x;
+        float py = pvector.y;
+        float pz = pvector.z;
+                                    // caso esférico:
+        float ro = length(pvector); // ro = raio da esfera = comprimento do vetor entre o centro da bbox e a superficie onde está o ponto (em model coords)
+        float theta = atan(px, pz);
+        float phi = asin(py/ro);
+
+        U = (theta+M_PI)/(2*M_PI); //U = theta normalizado [-pi, pi] -> [0,1]
+        V = (phi+ M_PI_2)/M_PI;  //V = phi normalizado [-pi/2 , pi/2] -> [0,1]
+
+        Kd = texture(selected_texture, vec2(U,V)).rgb;
+
+        vec3 I = vec3(1.0,1.0,1.0);
+        vec3 lambert_diffuse_term = I*Kd*max(0,dot(l,n));
+
+        vec3 Ia = vec3(0.0,0.0,0.0);
+        vec3 ambient_term = Ka*Ia;
+
+        vec3 phong_specular_term  = Ks*I*pow(max(0,dot(v,normalize(r))),q);
+
+
+        if(beta<alpha){
+            lambert_diffuse_term = vec3(0.0,0.0,0.0);
+            phong_specular_term = vec3(0.0,0.0,0.0);
+        }
+        color.rgb = Kd;
     }
 
 
